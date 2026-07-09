@@ -1,0 +1,3 @@
+# whitepaper.md
+
+Contenido pendiente...
