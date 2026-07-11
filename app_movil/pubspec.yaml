@@ -13,8 +13,8 @@ dependencies:
   # Conexión HTTP
   http: ^1.1.0
 
-  # NFC
-  flutter_nfc_kit: ^3.4.0
+  # NFC (RootFi Tap to Pay)
+  rootfi_tap_to_pay: ^0.1.0
 
   # Biometría (huella / rostro)
   local_auth: ^2.1.6
