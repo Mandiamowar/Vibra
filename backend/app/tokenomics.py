@@ -30,27 +30,40 @@ class Tokenomics:
         ).count()
     
     def calcular_oferta_total(self) -> float:
-        usuarios = self.db.query(Usuario).all()
-        saldo_total = sum(u.saldo for u in usuarios)
+        """Calcula la oferta total de VIBRA (emisión inicial - quemas)."""
+        # Obtener todas las quemas acumuladas
         quemas = self.db.query(Transaccion).filter(Transaccion.estado == "confirmada").all()
         total_quemado = sum(tx.quemado for tx in quemas)
-        return saldo_total + total_quemado
+        # La oferta total es la emisión inicial menos lo quemado
+        oferta = settings.OFERTA_INICIAL - total_quemado
+        return max(oferta, 0.0)  # Nunca negativa
     
     def actualizar_precio(self) -> float:
         gini = self.calcular_gini()
         actividad = self.calcular_actividad()
         oferta = self.calcular_oferta_total()
+        
+        # Factor 1: Distribución (Gini)
         factor_distribucion = 1 + (1 - gini) * 0.5
+        
+        # Factor 2: Actividad de red
         factor_actividad = 1.0
         if actividad > 100:
             factor_actividad = 1.005
         elif actividad < 10:
             factor_actividad = 0.998
+        
+        # Factor 3: Oferta (quema)
+        # Si no hay oferta, evitar división por cero
         if oferta > 0:
             factor_oferta = settings.OFERTA_INICIAL / oferta
         else:
             factor_oferta = 1.0
+        
+        # Precio final
         precio = settings.PRECIO_BASE * factor_distribucion * factor_actividad * factor_oferta
+        
+        # Guardar historial
         historial = PrecioHistorial(
             precio=precio,
             gini=gini,
@@ -58,6 +71,7 @@ class Tokenomics:
         )
         self.db.add(historial)
         self.db.commit()
+        
         return precio
     
     def aplicar_comision(self, tx: Transaccion) -> float:

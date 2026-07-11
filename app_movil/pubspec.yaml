@@ -1,0 +1,37 @@
+name: app_movil
+description: "Vibra Pay - App de pagos con NFC"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Conexión HTTP
+  http: ^1.1.0
+
+  # NFC
+  flutter_nfc_kit: ^3.4.0
+
+  # Biometría (huella / rostro)
+  local_auth: ^2.1.6
+
+  # Gestión de estado
+  provider: ^6.0.5
+
+  # Almacenamiento seguro (para el token de sesión)
+  flutter_secure_storage: ^9.0.0
+
+  # QR (alternativa al NFC por si no funciona)
+  qr_flutter: ^4.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
