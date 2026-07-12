@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vibrapay.app"
+    namespace = "com.example.app_movil"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -14,12 +14,12 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.vibrapay.app"
-        minSdk = 24
-        targetSdk = 36
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-    }
+    applicationId = "com.example.app_movil"   // ← esto debe coincidir con el AndroidManifest
+    minSdk = 24
+    targetSdk = 36
+    versionCode = flutter.versionCode
+    versionName = flutter.versionName
+}
 
     buildTypes {
         release {
