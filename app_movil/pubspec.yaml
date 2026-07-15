@@ -16,7 +16,6 @@ dependencies:
   local_auth: ^2.1.6
   flutter_nfc_kit: ^3.6.2  # opcional
   qr_flutter: ^4.1.0          # Para generar QR
-  qr_code_scanner: ^1.0.0     # Para escanear QR
   image_picker: ^1.0.0        # (opcional) para subir fotos
   share_plus: ^7.0.0          # (opcional) para compartir PDF
 dev_dependencies:
