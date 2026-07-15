@@ -1,19 +1,39 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, DECIMAL
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from .database import Base
 
+# ============================================
+# MODELO USUARIO (extendido con datos fiscales)
+# ============================================
 class Usuario(Base):
     __tablename__ = "usuarios"
+
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, unique=True, index=True)
     saldo = Column(Float, default=0.0)
     reputacion = Column(Float, default=5.0)
     creado_en = Column(DateTime, default=datetime.utcnow)
 
+    # Campos nuevos para facturación B2B
+    nif = Column(String, nullable=True)
+    razon_social = Column(String, nullable=True)
+    email_factura = Column(String, nullable=True)
+    direccion_factura = Column(String, nullable=True)
+
+    # Relación con Negocio (1 a 1)
+    negocio = relationship("Negocio", back_populates="usuario", uselist=False)
+
+    # Relación con Facturas como cliente
+    facturas_cliente = relationship("Factura", foreign_keys="Factura.cliente_id", back_populates="cliente")
+
+# ============================================
+# MODELO TRANSACCIÓN
+# ============================================
 class Transaccion(Base):
     __tablename__ = "transacciones"
+
     id = Column(Integer, primary_key=True, index=True)
     emisor_id = Column(Integer, ForeignKey("usuarios.id"))
     receptor_id = Column(Integer, ForeignKey("usuarios.id"))
@@ -23,63 +43,72 @@ class Transaccion(Base):
     validadores_votos = Column(Integer, default=0)
     estado = Column(String, default="pendiente")
     creado_en = Column(DateTime, default=datetime.utcnow)
+
     emisor = relationship("Usuario", foreign_keys=[emisor_id])
     receptor = relationship("Usuario", foreign_keys=[receptor_id])
 
+# ============================================
+# MODELO NODO GRAFO
+# ============================================
 class NodoGrafo(Base):
     __tablename__ = "nodos_grafo"
+
     id = Column(Integer, primary_key=True, index=True)
     transaccion_id = Column(Integer, ForeignKey("transacciones.id"))
     hash_nodo = Column(String, unique=True, index=True)
     enlaces_previos = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+# ============================================
+# MODELO PRECIO HISTORIAL
+# ============================================
 class PrecioHistorial(Base):
     __tablename__ = "precio_historial"
+
     id = Column(Integer, primary_key=True, index=True)
     precio = Column(Float)
     gini = Column(Float)
     transacciones_24h = Column(Integer)
-    timestamp = Column(DateTime, default=datetime.utcnow)# Archivo creado por Vibra Pay
-# --- NUEVOS MODELOS PARA FACTURACIÓN ---
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+# ============================================
+# MODELOS NUEVOS PARA FACTURACIÓN
+# ============================================
 
 class Negocio(Base):
     __tablename__ = "negocios"
 
     id = Column(Integer, primary_key=True, index=True)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"), unique=True)  # Un usuario puede ser negocio
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), unique=True)
     nombre_comercial = Column(String, nullable=False)
     nif = Column(String, nullable=False, unique=True)
-    direccion = Column(String)
-    email_contacto = Column(String)
-    telefono = Column(String)
+    direccion = Column(String, nullable=True)
+    email_contacto = Column(String, nullable=True)
+    telefono = Column(String, nullable=True)
     serie_factura = Column(String, default="A")
     ultimo_numero = Column(Integer, default=0)
-    plan = Column(String, default="gratis")  # gratis, pro, payg
+    plan = Column(String, default="gratis")
     creado_en = Column(DateTime, default=datetime.utcnow)
 
-    # Relación con usuario (si quieres)
+    # Relaciones
     usuario = relationship("Usuario", back_populates="negocio")
-
-# Añadir relación inversa en Usuario (opcional)
-# En la clase Usuario, añade:
-# negocio = relationship("Negocio", back_populates="usuario", uselist=False)
+    facturas = relationship("Factura", back_populates="negocio")
 
 class Factura(Base):
     __tablename__ = "facturas"
 
     id = Column(Integer, primary_key=True, index=True)
     negocio_id = Column(Integer, ForeignKey("negocios.id"))
-    cliente_id = Column(Integer, ForeignKey("usuarios.id"))  # El cliente es un usuario
+    cliente_id = Column(Integer, ForeignKey("usuarios.id"))
     email_destino = Column(String, nullable=False)
     numero_factura = Column(String, unique=True, nullable=False)
     fecha = Column(String, nullable=False)  # ISO date
-    importe = Column(Float, nullable=False)
-    concepto = Column(String)
-    pdf_path = Column(String)  # Ruta local o URL
-    enviado = Column(Integer, default=0)  # 0=no enviado, 1=enviado
+    importe = Column(DECIMAL(10,2), nullable=False)
+    concepto = Column(String, nullable=True)
+    pdf_path = Column(String, nullable=True)
+    enviado = Column(Integer, default=0)
     creado_en = Column(DateTime, default=datetime.utcnow)
 
     # Relaciones
-    
-    negocio = relationship("Negocio", back_populates="usuario", uselist=False)
+    negocio = relationship("Negocio", back_populates="facturas")
+    cliente = relationship("Usuario", foreign_keys=[cliente_id], back_populates="facturas_cliente")
