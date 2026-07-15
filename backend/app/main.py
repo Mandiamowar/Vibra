@@ -1,6 +1,9 @@
 # Archivo creado por Vibra Pay
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from .routers import usuarios, transacciones, precio, negocios, facturas
+
+# ...
 
 from .database import engine, Base
 from .routers import usuarios, transacciones, precio
@@ -24,6 +27,9 @@ app.add_middleware(
 app.include_router(usuarios.router)
 app.include_router(transacciones.router)
 app.include_router(precio.router)
+app.include_router(negocios.router)
+app.include_router(facturas.router)
+
 
 @app.get("/")
 def root():

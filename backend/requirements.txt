@@ -7,3 +7,6 @@ pydantic==2.13.4
 pydantic-settings==2.6.1
 python-multipart==0.0.20
 psycopg2-binary==2.9.9
+reportlab==4.2.5
+qrcode[pil]==7.4.2
+Pillow

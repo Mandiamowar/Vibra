@@ -41,3 +41,45 @@ class PrecioHistorial(Base):
     gini = Column(Float)
     transacciones_24h = Column(Integer)
     timestamp = Column(DateTime, default=datetime.utcnow)# Archivo creado por Vibra Pay
+# --- NUEVOS MODELOS PARA FACTURACIÓN ---
+
+class Negocio(Base):
+    __tablename__ = "negocios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), unique=True)  # Un usuario puede ser negocio
+    nombre_comercial = Column(String, nullable=False)
+    nif = Column(String, nullable=False, unique=True)
+    direccion = Column(String)
+    email_contacto = Column(String)
+    telefono = Column(String)
+    serie_factura = Column(String, default="A")
+    ultimo_numero = Column(Integer, default=0)
+    plan = Column(String, default="gratis")  # gratis, pro, payg
+    creado_en = Column(DateTime, default=datetime.utcnow)
+
+    # Relación con usuario (si quieres)
+    usuario = relationship("Usuario", back_populates="negocio")
+
+# Añadir relación inversa en Usuario (opcional)
+# En la clase Usuario, añade:
+# negocio = relationship("Negocio", back_populates="usuario", uselist=False)
+
+class Factura(Base):
+    __tablename__ = "facturas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    negocio_id = Column(Integer, ForeignKey("negocios.id"))
+    cliente_id = Column(Integer, ForeignKey("usuarios.id"))  # El cliente es un usuario
+    email_destino = Column(String, nullable=False)
+    numero_factura = Column(String, unique=True, nullable=False)
+    fecha = Column(String, nullable=False)  # ISO date
+    importe = Column(Float, nullable=False)
+    concepto = Column(String)
+    pdf_path = Column(String)  # Ruta local o URL
+    enviado = Column(Integer, default=0)  # 0=no enviado, 1=enviado
+    creado_en = Column(DateTime, default=datetime.utcnow)
+
+    # Relaciones
+    negocio = relationship("Negocio")
+    cliente = relationship("Usuario")

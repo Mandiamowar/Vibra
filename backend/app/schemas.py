@@ -33,3 +33,56 @@ class PrecioResponse(BaseModel):
     precio: float
     gini: float
     transacciones_24h: int
+
+    # --- ESQUEMAS DE NEGOCIO ---
+
+class NegocioBase(BaseModel):
+    nombre_comercial: str
+    nif: str
+    direccion: str | None = None
+    email_contacto: str | None = None
+    telefono: str | None = None
+    serie_factura: str = "A"
+
+class NegocioCreate(NegocioBase):
+    usuario_id: int  # ID del usuario que será el negocio
+
+class NegocioResponse(NegocioBase):
+    id: int
+    usuario_id: int
+    ultimo_numero: int
+    plan: str
+    creado_en: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- ESQUEMAS DE FACTURA ---
+
+class FacturaCreate(BaseModel):
+    negocio_id: int
+    cliente_id: int
+    importe: float
+    concepto: str
+    email_destino: str | None = None  # Si no se envía, se usa el email del cliente
+
+class FacturaResponse(BaseModel):
+    id: int
+    numero_factura: str
+    pdf_url: str
+    enviado: bool
+    fecha: str
+    importe: float
+    concepto: str
+
+    class Config:
+        from_attributes = True
+
+class FacturaListResponse(BaseModel):
+    id: int
+    numero_factura: str
+    fecha: str
+    importe: float
+    concepto: str
+    cliente_nombre: str
+    enviado: bool
