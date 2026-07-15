@@ -81,5 +81,5 @@ class Factura(Base):
     creado_en = Column(DateTime, default=datetime.utcnow)
 
     # Relaciones
-    negocio = relationship("Negocio")
-    cliente = relationship("Usuario")
+    
+    negocio = relationship("Negocio", back_populates="usuario", uselist=False)
