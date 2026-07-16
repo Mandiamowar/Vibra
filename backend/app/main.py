@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import usuarios, transacciones, precio, negocios, facturas
 
-# ...
+from .routers import pagos
+app.include_router(pagos.router)
 
 from .database import engine, Base
 from .routers import usuarios, transacciones, precio
