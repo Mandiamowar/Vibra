@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, DECIMAL
 from sqlalchemy.orm import relationship
-from datetime import datetime
-
+from datetime import datetime, timedelta  # <-- IMPORTAR timedelta
 from .database import Base
 
 # ============================================
@@ -112,3 +111,22 @@ class Factura(Base):
     # Relaciones
     negocio = relationship("Negocio", back_populates="facturas")
     cliente = relationship("Usuario", foreign_keys=[cliente_id], back_populates="facturas_cliente")
+
+# ============================================
+# MODELO PARA PAGOS P2P CON CÓDIGO DE 6 DÍGITOS
+# ============================================
+class PagoPendiente(Base):
+    __tablename__ = "pagos_pendientes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    codigo = Column(String(6), unique=True, nullable=False)
+    emisor_id = Column(Integer, ForeignKey("usuarios.id"))
+    receptor_id = Column(Integer, ForeignKey("usuarios.id"))
+    monto = Column(DECIMAL(10,2), nullable=False)
+    estado = Column(String, default="pendiente")
+    creado_en = Column(DateTime, default=datetime.utcnow)
+    expira_en = Column(DateTime, default=datetime.utcnow() + timedelta(minutes=5))
+
+    # Relaciones
+    emisor = relationship("Usuario", foreign_keys=[emisor_id])
+    receptor = relationship("Usuario", foreign_keys=[receptor_id])

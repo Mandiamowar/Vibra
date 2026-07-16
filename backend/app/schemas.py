@@ -86,3 +86,22 @@ class FacturaListResponse(BaseModel):
     concepto: str
     cliente_nombre: str
     enviado: bool
+
+class PagoGenerarRequest(BaseModel):
+    emisor_id: int
+    receptor_id: int
+    monto: float
+
+class PagoGenerarResponse(BaseModel):
+    codigo: str
+    monto: float
+    expira_en: str
+
+class PagoConfirmarRequest(BaseModel):
+    codigo: str
+
+class PagoConfirmarResponse(BaseModel):
+    mensaje: str
+    monto: float
+    emisor: str
+    receptor: str
