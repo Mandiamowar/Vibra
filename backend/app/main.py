@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import engine, Base
-from .routers import usuarios, transacciones, precio, negocios, facturas, pagos  # <-- importa pagos
+from .routers import usuarios, transacciones, precio, negocios, facturas, pagos  # <- importa pagos
 
 # Crear la app ANTES de incluir routers
 app = FastAPI(
@@ -26,7 +26,7 @@ app.include_router(transacciones.router)
 app.include_router(precio.router)
 app.include_router(negocios.router)
 app.include_router(facturas.router)
-app.include_router(pagos.router)   # <-- Asegúrate de que esta línea existe y está después de app = FastAPI()
+app.include_router(pagos.router)   # <-- ESTA LÍNEA ES CLAVE
 
 @app.get("/")
 def root():

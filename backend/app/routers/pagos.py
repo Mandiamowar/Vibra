@@ -60,24 +60,24 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(400, "El código ha expirado")
 
-    # Validar receptor
-    receptor = db.query(Usuario).filter(Usuario.id == pago.receptor_id).first()
-    if not receptor:
-        raise HTTPException(404, "Receptor no encontrado")
-
-    # Validar emisor (todavía tiene saldo)
+    # Obtener emisor y receptor
     emisor = db.query(Usuario).filter(Usuario.id == pago.emisor_id).first()
-    if not emisor or emisor.saldo < pago.monto:
+    receptor = db.query(Usuario).filter(Usuario.id == pago.receptor_id).first()
+    if not emisor or not receptor:
+        raise HTTPException(404, "Usuario no encontrado")
+
+    # Verificar saldo (por si cambió mientras)
+    if emisor.saldo < pago.monto:
         pago.estado = "fallido"
         db.commit()
         raise HTTPException(400, "Saldo insuficiente del emisor")
 
-    # Realizar la transferencia
+    # 🔥 ACTUALIZAR SALDOS
     emisor.saldo -= pago.monto
     receptor.saldo += pago.monto
     pago.estado = "completado"
 
-    # Registrar la transacción (tu tabla existente)
+    # Registrar la transacción en la tabla 'transacciones'
     tx = Transaccion(
         emisor_id=pago.emisor_id,
         receptor_id=pago.receptor_id,
@@ -91,5 +91,7 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
         "mensaje": "Pago completado",
         "monto": pago.monto,
         "emisor": emisor.nombre,
-        "receptor": receptor.nombre
+        "receptor": receptor.nombre,
+        "nuevo_saldo_emisor": emisor.saldo,
+        "nuevo_saldo_receptor": receptor.saldo
     }
