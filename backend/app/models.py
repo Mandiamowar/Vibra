@@ -11,6 +11,7 @@ class Usuario(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, unique=True, index=True)
+    password = Column(String, nullable=True)
     saldo = Column(Float, default=0.0)
     reputacion = Column(Float, default=5.0)
     creado_en = Column(DateTime, default=datetime.utcnow)
@@ -20,6 +21,7 @@ class Usuario(Base):
     razon_social = Column(String, nullable=True)
     email_factura = Column(String, nullable=True)
     direccion_factura = Column(String, nullable=True)
+    
 
     # Relación con Negocio (1 a 1)
     negocio = relationship("Negocio", back_populates="usuario", uselist=False)

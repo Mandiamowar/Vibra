@@ -11,14 +11,12 @@ router = APIRouter(prefix="/pagos", tags=["pagos"])
 
 @router.post("/generar", response_model=PagoGenerarResponse)
 def generar_pago(data: PagoGenerarRequest, db: Session = Depends(get_db)):
-    # Validar emisor
     emisor = db.query(Usuario).filter(Usuario.id == data.emisor_id).first()
     if not emisor:
         raise HTTPException(404, "Emisor no encontrado")
     if emisor.saldo < data.monto:
         raise HTTPException(400, "Saldo insuficiente")
 
-    # Generar código de 6 dígitos único
     codigo = None
     while codigo is None:
         nuevo_codigo = f"{random.randint(100000, 999999)}"
@@ -26,7 +24,6 @@ def generar_pago(data: PagoGenerarRequest, db: Session = Depends(get_db)):
         if not existente:
             codigo = nuevo_codigo
 
-    # Crear pago pendiente
     pago = PagoPendiente(
         codigo=codigo,
         emisor_id=data.emisor_id,
@@ -46,28 +43,23 @@ def generar_pago(data: PagoGenerarRequest, db: Session = Depends(get_db)):
 
 @router.post("/confirmar", response_model=PagoConfirmarResponse)
 def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
-    # Buscar pago pendiente
     pago = db.query(PagoPendiente).filter(
         PagoPendiente.codigo == data.codigo,
         PagoPendiente.estado == "pendiente"
     ).first()
     if not pago:
         raise HTTPException(404, "Código inválido o pago ya procesado")
-        
 
-    # Verificar expiración
     if pago.expira_en < datetime.utcnow():
         pago.estado = "expirado"
         db.commit()
         raise HTTPException(400, "El código ha expirado")
 
-    # Obtener emisor y receptor
     emisor = db.query(Usuario).filter(Usuario.id == pago.emisor_id).first()
     receptor = db.query(Usuario).filter(Usuario.id == pago.receptor_id).first()
     if not emisor or not receptor:
         raise HTTPException(404, "Usuario no encontrado")
 
-    # Verificar saldo (por si cambió mientras)
     if emisor.saldo < pago.monto:
         pago.estado = "fallido"
         db.commit()
@@ -77,26 +69,15 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
     emisor.saldo -= pago.monto
     receptor.saldo += pago.monto
     pago.estado = "completado"
-    
-    # Logs para ver que está pasando en el backend
-    print(f"💰 Antes: emisor {emisor.saldo}, receptor {receptor.saldo}")
-    emisor.saldo -= pago.monto
-    receptor.saldo += pago.monto
-    print(f"💰 Después: emisor {emisor.saldo}, receptor {receptor.saldo}")
-    db.commit()
-    print("✅ Commit ejecutado")
 
-    # Registrar la transacción en la tabla 'transacciones'
     tx = Transaccion(
         emisor_id=pago.emisor_id,
         receptor_id=pago.receptor_id,
         monto=pago.monto,
         estado="confirmada"
     )
-    
-          
     db.add(tx)
-    db.commit()
+    db.commit()  # <--- ESTO ES CLAVE
 
     return {
         "mensaje": "Pago completado",

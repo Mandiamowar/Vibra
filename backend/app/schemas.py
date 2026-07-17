@@ -6,7 +6,7 @@ class UsuarioBase(BaseModel):
     nombre: str
 
 class UsuarioCreate(UsuarioBase):
-    pass
+    password: str | None = None
 
 class UsuarioResponse(UsuarioBase):
     id: int
