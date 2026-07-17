@@ -24,3 +24,18 @@ def obtener_usuario(usuario_id: int, db: Session = Depends(get_db)):
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return usuario
+
+@router.post("/login", response_model=LoginResponse)
+def login(data: LoginRequest, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.nombre == data.nombre).first()
+    if not usuario:
+        raise HTTPException(404, "Usuario no encontrado")
+    # 🔥 Por ahora, comparación en texto plano (para pruebas)
+    if usuario.password != data.password:
+        raise HTTPException(401, "Contraseña incorrecta")
+    return {
+        "id": usuario.id,
+        "nombre": usuario.nombre,
+        "saldo": usuario.saldo,
+        "token": str(usuario.id)  # Usamos el ID como token
+    }

@@ -53,6 +53,7 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
     ).first()
     if not pago:
         raise HTTPException(404, "Código inválido o pago ya procesado")
+        
 
     # Verificar expiración
     if pago.expira_en < datetime.utcnow():
@@ -76,6 +77,14 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
     emisor.saldo -= pago.monto
     receptor.saldo += pago.monto
     pago.estado = "completado"
+    
+    # Logs para ver que está pasando en el backend
+    print(f"💰 Antes: emisor {emisor.saldo}, receptor {receptor.saldo}")
+    emisor.saldo -= pago.monto
+    receptor.saldo += pago.monto
+    print(f"💰 Después: emisor {emisor.saldo}, receptor {receptor.saldo}")
+    db.commit()
+    print("✅ Commit ejecutado")
 
     # Registrar la transacción en la tabla 'transacciones'
     tx = Transaccion(
@@ -84,6 +93,8 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
         monto=pago.monto,
         estado="confirmada"
     )
+    
+          
     db.add(tx)
     db.commit()
 

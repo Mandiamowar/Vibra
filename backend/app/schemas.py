@@ -105,3 +105,13 @@ class PagoConfirmarResponse(BaseModel):
     monto: float
     emisor: str
     receptor: str
+    
+class LoginRequest(BaseModel):
+    nombre: str
+    password: str
+
+class LoginResponse(BaseModel):
+    id: int
+    nombre: str
+    saldo: float
+    token: str
