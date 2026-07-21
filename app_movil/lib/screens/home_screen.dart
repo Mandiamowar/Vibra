@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'transferir_screen.dart';
 import 'generar_codigo_pago_screen.dart';
+import 'confirmar_pago_screen.dart'; // ← IMPORTANTE: añadir este import
 import 'mis_facturas_screen.dart';
 import 'perfil_cliente_screen.dart';
 import 'business_mode_screen.dart';
@@ -75,6 +76,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 context, MaterialPageRoute(builder: (_) => const MisFacturasScreen())),
             tooltip: 'Mis Facturas',
           ),
+          // 🔥 NUEVO BOTÓN: Confirmar pago con código
+          IconButton(
+            icon: const Icon(Icons.payment),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ConfirmarPagoScreen()),
+              );
+              _cargarDatos(); // Recargar saldo al volver
+            },
+            tooltip: 'Confirmar pago con código',
+          ),
         ],
       ),
       body: IndexedStack(
@@ -104,11 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              // 🔥 QUITAR const
                               MaterialPageRoute(builder: (_) => TransferirScreen()),
                             );
                           },
-                          // 🔥 CAMBIAR ICONO
                           icon: const Icon(Icons.send, size: 30),
                           label: const Text('Pagar', style: TextStyle(fontSize: 18)),
                           style: ElevatedButton.styleFrom(
