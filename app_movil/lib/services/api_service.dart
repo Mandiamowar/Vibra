@@ -36,7 +36,6 @@ class ApiService {
     return await get('/usuarios/$id');
   }
 
-  // 🔥 NUEVO: buscar usuarios por nombre
   Future<List<dynamic>> buscarUsuarios(String nombre) async {
     try {
       final response = await get('/usuarios/buscar/$nombre');
@@ -109,6 +108,31 @@ class ApiService {
 
   Future<String> descargarFactura(int facturaId) async {
     return '$baseUrl/facturas/$facturaId/pdf';
+  }
+
+  // ---- NEGOCIOS (para facturación B2B) ----
+  Future<Map<String, dynamic>> registrarNegocio({
+    required int usuarioId,
+    required String nombreComercial,
+    required String nif,
+    String? direccion,
+    String? emailContacto,
+    String? telefono,
+    String serieFactura = 'A',
+  }) async {
+    return await post('/negocios/registrar', {
+      'usuario_id': usuarioId,
+      'nombre_comercial': nombreComercial,
+      'nif': nif,
+      'direccion': direccion,
+      'email_contacto': emailContacto,
+      'telefono': telefono,
+      'serie_factura': serieFactura,
+    });
+  }
+
+  Future<Map<String, dynamic>> obtenerNegocio(int usuarioId) async {
+    return await get('/negocios/$usuarioId');
   }
 
   // ---- UTILITY ----
