@@ -100,8 +100,7 @@ class _TransferirScreenState extends State<TransferirScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 🔥 CAMBIAR ICONO
-            Icon(Icons.send, size: 80, color: Colors.deepPurple),
+            const Icon(Icons.send, size: 80, color: Colors.deepPurple),
             const SizedBox(height: 20),
             Text(_estado, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 30),
@@ -129,7 +128,7 @@ class _TransferirScreenState extends State<TransferirScreen> {
                     final user = _resultados[index];
                     return ListTile(
                       title: Text(user['nombre']),
-                      subtitle: Text(user['email'] ?? 'sin email'),
+                      subtitle: Text('ID: ${user['id']}'), // ✅ sin email
                       onTap: () {
                         _nombreController.text = user['nombre'];
                         setState(() {

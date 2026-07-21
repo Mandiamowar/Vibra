@@ -22,7 +22,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.nombre == data.nombre).first()
     if not usuario:
         raise HTTPException(404, "Usuario no encontrado")
-    # En producción usar hash de contraseña, pero para pruebas comparación simple
+    # En producción usar hash de contraseña
     if usuario.password != data.password:
         raise HTTPException(401, "Contraseña incorrecta")
     return {
@@ -32,19 +32,18 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "token": str(usuario.id)
     }
 
-# 🔥 NUEVO ENDPOINT: búsqueda de usuarios por nombre (parcial)
+# 🔥 ENDPOINT DE BÚSQUEDA (sin email)
 @router.get("/buscar/{nombre}")
 def buscar_usuario_por_nombre(nombre: str, db: Session = Depends(get_db)):
-    # Buscar usuarios cuyo nombre contenga la cadena (case insensitive)
     usuarios = db.query(Usuario).filter(Usuario.nombre.ilike(f"%{nombre}%")).all()
     if not usuarios:
         raise HTTPException(404, "No se encontraron usuarios")
+    # ✅ Solo devolvemos id, nombre y saldo (sin email)
     return [
         {
             "id": u.id,
             "nombre": u.nombre,
             "saldo": u.saldo,
-            "email": u.email
         } for u in usuarios
     ]
 
