@@ -36,14 +36,17 @@ class _ConfirmarPagoScreenState extends State<ConfirmarPagoScreen> {
         _codigoController.clear();
       });
 
-      // Indicar éxito al cerrar
-      Navigator.pop(context, true);
+      // 🔥 Devolver los nuevos saldos a HomeScreen
+      Navigator.pop(context, {
+        'success': true,
+        'nuevo_saldo': response['nuevo_saldo_receptor'], // el receptor es quien confirma
+      });
     } catch (e) {
       setState(() {
         _estado = '❌ Error: $e';
         _isProcessing = false;
       });
-      Navigator.pop(context, false);
+      Navigator.pop(context, {'success': false});
     }
   }
 
