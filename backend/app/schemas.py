@@ -8,6 +8,7 @@ class UsuarioBase(BaseModel):
 class UsuarioCreate(UsuarioBase):
     password: str | None = None
 
+
 class UsuarioResponse(UsuarioBase):
     id: int
     saldo: float
@@ -15,6 +16,14 @@ class UsuarioResponse(UsuarioBase):
     creado_en: datetime
     class Config:
         from_attributes = True
+
+class UsuarioUpdate(BaseModel):
+    nombre: str | None = None
+    password: str | None = None
+    nif: str | None = None
+    razon_social: str | None = None
+    email_factura: str | None = None
+    direccion_factura: str | None = None
 
 class TransferenciaRequest(BaseModel):
     emisor_id: int

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Usuario, Negocio
-from ..schemas import UsuarioCreate, UsuarioResponse, LoginRequest, LoginResponse
+from ..schemas import UsuarioCreate, UsuarioResponse, LoginRequest, LoginResponse, UsuarioUpdate
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
@@ -46,6 +46,16 @@ def buscar_usuario_por_nombre(nombre: str, db: Session = Depends(get_db)):
             "saldo": u.saldo,
         } for u in usuarios
     ]
+@router.put("/{usuario_id}")
+def actualizar_usuario(usuario_id: int, data: UsuarioUpdate, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(404, "Usuario no encontrado")
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(usuario, key, value)
+    db.commit()
+    db.refresh(usuario)
+    return usuario
 
 @router.get("/{usuario_id}", response_model=UsuarioResponse)
 def obtener_usuario(usuario_id: int, db: Session = Depends(get_db)):

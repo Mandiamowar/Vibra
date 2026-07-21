@@ -12,8 +12,7 @@ class GenerarCodigoPagoScreen extends StatefulWidget {
 
 class _GenerarCodigoPagoScreenState extends State<GenerarCodigoPagoScreen> {
   final TextEditingController _montoController = TextEditingController();
-  final TextEditingController _receptorIdController = TextEditingController();
-  String _estado = 'Introduce el monto y el ID del receptor';
+  String _estado = 'Introduce el monto para generar el código';
   bool _isGenerating = false;
   String? _codigoGenerado;
 
@@ -23,11 +22,6 @@ class _GenerarCodigoPagoScreenState extends State<GenerarCodigoPagoScreen> {
       setState(() => _estado = '⚠️ Introduce un monto válido');
       return;
     }
-    final receptorId = int.tryParse(_receptorIdController.text.trim());
-    if (receptorId == null || receptorId <= 0) {
-      setState(() => _estado = '⚠️ Introduce un ID de receptor válido');
-      return;
-    }
 
     setState(() {
       _isGenerating = true;
@@ -35,18 +29,41 @@ class _GenerarCodigoPagoScreenState extends State<GenerarCodigoPagoScreen> {
     });
 
     try {
+      // 🔥 El receptor es el usuario logueado (el que genera el código)
       final auth = Provider.of<AuthService>(context, listen: false);
-      final emisorId = await auth.obtenerToken();
-      if (emisorId == null) {
+      final receptorId = await auth.obtenerToken();
+      if (receptorId == null) {
         setState(() => _estado = '❌ Usuario no autenticado');
         _isGenerating = false;
         return;
       }
 
+      // ⚠️ IMPORTANTE: En el backend, el endpoint /pagos/generar espera emisor_id y receptor_id.
+      // Pero en este flujo, el receptor es el que genera el código.
+      // El emisor (pagador) se asignará cuando se confirme el pago.
+      // Por eso, pasamos receptorId como receptor y emisorId lo dejamos en 0 o null.
+      // El backend debe ajustarse para que el emisor sea opcional en la generación,
+      // o mejor, que el endpoint solo necesite receptor_id y monto.
+      // Si tu backend actual requiere emisor_id, puedes pasar un valor por defecto (ej: 0)
+      // y luego en confirmar se asigna el emisor real.
+      
+      // Por ahora, ajustamos la llamada para que el backend funcione:
+      // Pasamos el receptorId como receptor, y el emisorId lo ponemos a 0 (o al del usuario si quieres)
+      // Pero lo correcto es que el backend solo necesite receptor_id y monto.
+      // Como tengo entendido que tu backend ya tiene el endpoint /pagos/generar con emisor_id y receptor_id,
+      // voy a pasar el receptorId como emisorId también (si no, el backend dará error).
+      // 🔥 SOLUCIÓN RÁPIDA: pasamos el mismo ID para emisor y receptor (el receptor actual)
+      // y luego en confirmar se sobreescribe el emisor con el pagador real.
+      // Pero esto es un parche. La solución definitiva es modificar el backend.
+      
+      // Mientras tanto, haremos que el backend acepte un emisor_id opcional.
+      // Voy a modificar la llamada para que el backend no falle.
+      // Como el backend actual requiere emisor_id, usamos el receptorId como emisor también (temporal).
+      
       final api = Provider.of<ApiService>(context, listen: false);
       final response = await api.generarPago(
-        emisorId: int.parse(emisorId),
-        receptorId: receptorId,
+        emisorId: int.parse(receptorId), // temporal: el mismo que receptor
+        receptorId: int.parse(receptorId),
         monto: monto,
       );
 
@@ -80,16 +97,6 @@ class _GenerarCodigoPagoScreenState extends State<GenerarCodigoPagoScreen> {
             const SizedBox(height: 20),
             Text(_estado, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 30),
-            TextField(
-              controller: _receptorIdController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'ID del receptor',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 12),
             TextField(
               controller: _montoController,
               keyboardType: TextInputType.numberWithOptions(decimal: true),
