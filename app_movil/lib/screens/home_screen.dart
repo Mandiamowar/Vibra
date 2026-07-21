@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
-import 'history_screen.dart';
-import 'settings_screen.dart';
+import 'transferir_screen.dart';
+import 'generar_codigo_pago_screen.dart';
+import 'mis_facturas_screen.dart';
 import 'perfil_cliente_screen.dart';
 import 'business_mode_screen.dart';
-import 'mis_facturas_screen.dart';
-import 'generar_codigo_pago_screen.dart';
-import 'confirmar_pago_screen.dart';
+import 'history_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() => _saldo = usuario['saldo'] ?? 0.0);
       }
     } catch (e) {
-      // Si falla, no actualizar
+      // ignorar
     } finally {
       setState(() => _isLoading = false);
     }
@@ -88,53 +88,68 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     _isLoading ? 'Cargando...' : 'Saldo: ${_saldo.toStringAsFixed(2)} VIBRA',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
                     'Precio: ${_precio.toStringAsFixed(6)} €',
                     style: const TextStyle(fontSize: 18),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 40),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const GenerarCodigoPagoScreen()),
-                          );
-                        },
-                        icon: const Icon(Icons.qr_code),
-                        label: const Text('Generar código'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              // 🔥 QUITAR const
+                              MaterialPageRoute(builder: (_) => TransferirScreen()),
+                            );
+                          },
+                          // 🔥 CAMBIAR ICONO
+                          icon: const Icon(Icons.send, size: 30),
+                          label: const Text('Pagar', style: TextStyle(fontSize: 18)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ConfirmarPagoScreen()),
-                          );
-                          _cargarDatos();
-                        },
-                        icon: const Icon(Icons.payment),
-                        label: const Text('Confirmar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const GenerarCodigoPagoScreen()),
+                            );
+                            _cargarDatos();
+                          },
+                          icon: const Icon(Icons.qr_code, size: 30),
+                          label: const Text('Recibir', style: TextStyle(fontSize: 18)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 16),
                   const Text(
-                    'Genera un código para que otro usuario pague o confirma un código para recibir un pago.',
+                    'Paga a otro usuario o recibe un pago con código de 6 dígitos.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ],
               ),

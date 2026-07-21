@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import random
+from decimal import Decimal
 
 from ..database import get_db
 from ..models import Usuario, Transaccion, PagoPendiente
@@ -17,6 +18,7 @@ def generar_pago(data: PagoGenerarRequest, db: Session = Depends(get_db)):
     if emisor.saldo < data.monto:
         raise HTTPException(400, "Saldo insuficiente")
 
+    # Generar código único
     codigo = None
     while codigo is None:
         nuevo_codigo = f"{random.randint(100000, 999999)}"
@@ -28,7 +30,7 @@ def generar_pago(data: PagoGenerarRequest, db: Session = Depends(get_db)):
         codigo=codigo,
         emisor_id=data.emisor_id,
         receptor_id=data.receptor_id,
-        monto=data.monto,
+        monto=Decimal(str(data.monto)),  # Guardar como Decimal
         expira_en=datetime.utcnow() + timedelta(minutes=5)
     )
     db.add(pago)
@@ -60,28 +62,32 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
     if not emisor or not receptor:
         raise HTTPException(404, "Usuario no encontrado")
 
-    if emisor.saldo < pago.monto:
+    # 🔥 CONVERTIR DECIMAL A FLOAT
+    monto_float = float(pago.monto)
+
+    if emisor.saldo < monto_float:
         pago.estado = "fallido"
         db.commit()
         raise HTTPException(400, "Saldo insuficiente del emisor")
 
-    # 🔥 ACTUALIZAR SALDOS
-    emisor.saldo -= pago.monto
-    receptor.saldo += pago.monto
+    # ACTUALIZAR SALDOS
+    emisor.saldo -= monto_float
+    receptor.saldo += monto_float
     pago.estado = "completado"
 
+    # Registrar transacción
     tx = Transaccion(
         emisor_id=pago.emisor_id,
         receptor_id=pago.receptor_id,
-        monto=pago.monto,
+        monto=monto_float,
         estado="confirmada"
     )
     db.add(tx)
-    db.commit()  # <--- ESTO ES CLAVE
+    db.commit()
 
     return {
         "mensaje": "Pago completado",
-        "monto": pago.monto,
+        "monto": monto_float,
         "emisor": emisor.nombre,
         "receptor": receptor.nombre,
         "nuevo_saldo_emisor": emisor.saldo,

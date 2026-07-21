@@ -15,7 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isLoginMode = true; // true = login, false = registro
+  bool _isLoginMode = true;
 
   void _submit() async {
     final nombre = _nombreController.text.trim();
@@ -23,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (nombre.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
+        // 🔥 CORREGIDO: solo un argumento posicional
         const SnackBar(content: Text('Completa todos los campos')),
       );
       return;
@@ -37,7 +38,6 @@ class _LoginScreenState extends State<LoginScreen> {
       Map<String, dynamic> response;
 
       if (_isLoginMode) {
-        // 🔐 INICIAR SESIÓN
         response = await api.login(nombre, password);
         if (response['id'] != null) {
           await auth.guardarToken(response['token']);
@@ -51,10 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       } else {
-        // 📝 REGISTRAR NUEVO USUARIO
-        response = await api.registrarUsuario(nombre, password);
+        response = await api.registrarUsuario(nombre);
         if (response['id'] != null) {
-          // Una vez registrado, guardamos el token y redirigimos
           await auth.guardarToken(response['id'].toString());
           Navigator.pushReplacement(
             context,
