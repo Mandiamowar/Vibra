@@ -31,24 +31,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _cargarDatos() async {
-    setState(() => _isLoading = true);
-    final api = Provider.of<ApiService>(context, listen: false);
-    final auth = Provider.of<AuthService>(context, listen: false);
-    try {
-      final precioResp = await api.obtenerPrecio();
-      setState(() => _precio = precioResp['precio'] ?? 0.0);
+  print('🔄 Cargando datos...');
+  setState(() => _isLoading = true);
+  final api = Provider.of<ApiService>(context, listen: false);
+  final auth = Provider.of<AuthService>(context, listen: false);
+  try {
+    final precioResp = await api.obtenerPrecio();
+    print('💰 Precio: $precioResp');
+    setState(() => _precio = precioResp['precio'] ?? 0.0);
 
-      final token = await auth.obtenerToken();
-      if (token != null) {
-        final usuario = await api.obtenerUsuario(int.parse(token));
-        setState(() => _saldo = usuario['saldo'] ?? 0.0);
-      }
-    } catch (e) {
-      // ignorar
-    } finally {
-      setState(() => _isLoading = false);
+    final token = await auth.obtenerToken();
+    print('🔑 Token: $token');
+    if (token != null) {
+      final usuario = await api.obtenerUsuario(int.parse(token));
+      print('👤 Usuario: $usuario');
+      setState(() => _saldo = usuario['saldo'] ?? 0.0);
     }
+  } catch (e) {
+    print('❌ Error en _cargarDatos: $e');
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               context,
                               MaterialPageRoute(builder: (_) => const TransferirScreen()),
                             );
+                            _cargarDatos();
                           },
                           icon: const Icon(Icons.send, size: 30),
                           label: const Text('Pagar', style: TextStyle(fontSize: 18)),
