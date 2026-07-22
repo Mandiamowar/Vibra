@@ -65,20 +65,21 @@ class ApiService {
 
   // ---- PAGOS con código ----
   Future<Map<String, dynamic>> generarPago({
-    required int emisorId,
-    required int receptorId,
-    required double monto,
-  }) async {
-    return await post('/pagos/generar', {
-      'emisor_id': emisorId,
-      'receptor_id': receptorId,
-      'monto': monto,
-    });
-  }
+  required int receptorId,
+  required double monto,
+}) async {
+  return await post('/pagos/generar', {
+    'receptor_id': receptorId,
+    'monto': monto,
+  });
+}
 
-  Future<Map<String, dynamic>> confirmarPago(String codigo) async {
-    return await post('/pagos/confirmar', {'codigo': codigo});
-  }
+  Future<Map<String, dynamic>> confirmarPago(String codigo, {required int emisorId}) async {
+  return await post('/pagos/confirmar', {
+    'codigo': codigo,
+    'emisor_id': emisorId,
+  });
+}
 
   // ---- FACTURAS ----
   Future<Map<String, dynamic>> generarFactura({

@@ -97,9 +97,9 @@ class FacturaListResponse(BaseModel):
     enviado: bool
 
 class PagoGenerarRequest(BaseModel):
-    emisor_id: int
     receptor_id: int
     monto: float
+    emisor_id: int | None = None  # Opcional, no se usa en generación
 
 class PagoGenerarResponse(BaseModel):
     codigo: str

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart'; // 🔥 Importante: añadir este import
 
 class ConfirmarPagoScreen extends StatefulWidget {
   const ConfirmarPagoScreen({super.key});
@@ -27,8 +28,20 @@ class _ConfirmarPagoScreenState extends State<ConfirmarPagoScreen> {
     });
 
     try {
+      // Obtener el ID del pagador (usuario logueado)
+      final auth = Provider.of<AuthService>(context, listen: false);
+      final emisorId = await auth.obtenerToken();
+      if (emisorId == null) {
+        setState(() => _estado = '❌ Usuario no autenticado');
+        _isProcessing = false;
+        return;
+      }
+
       final api = Provider.of<ApiService>(context, listen: false);
-      final response = await api.confirmarPago(codigo);
+      final response = await api.confirmarPago(
+        codigo,
+        emisorId: int.parse(emisorId),
+      );
 
       setState(() {
         _estado = '✅ Pago recibido: ${response['monto']} VIBRA de ${response['emisor']}';

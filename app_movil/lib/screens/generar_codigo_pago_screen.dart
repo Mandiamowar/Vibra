@@ -62,7 +62,6 @@ class _GenerarCodigoPagoScreenState extends State<GenerarCodigoPagoScreen> {
       
       final api = Provider.of<ApiService>(context, listen: false);
       final response = await api.generarPago(
-        emisorId: int.parse(receptorId), // temporal: el mismo que receptor
         receptorId: int.parse(receptorId),
         monto: monto,
       );
