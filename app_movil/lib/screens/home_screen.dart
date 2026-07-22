@@ -77,23 +77,14 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'Mis Facturas',
           ),
           // 🔥 NUEVO BOTÓN: Confirmar pago con código
-          IconButton(
-  icon: const Icon(Icons.payment),
-  onPressed: () async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ConfirmarPagoScreen()),
+      IconButton(
+          icon: const Icon(Icons.payment),
+          onPressed: () async {
+           await Navigator.push(
+               context,
+               MaterialPageRoute(builder: (_) => const ConfirmarPagoScreen()),
     );
-    // Si el pago fue exitoso, actualizar saldo
-    if (result != null && result['success'] == true) {
-      // Actualizar saldo directamente con el valor devuelto
-      setState(() {
-        _saldo = result['nuevo_saldo']; // Asumiendo que el usuario logueado es el receptor (quien confirma)
-      });
-    } else {
-      // En caso de error, recargar desde el backend
-      _cargarDatos();
-    }
+     _cargarDatos(); // 🔥 SIEMPRE recargar al volver
   },
   tooltip: 'Confirmar pago con código',
 ),

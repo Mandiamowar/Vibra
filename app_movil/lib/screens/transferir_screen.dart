@@ -17,6 +17,7 @@ class _TransferirScreenState extends State<TransferirScreen> {
   bool _isProcessing = false;
   List<dynamic> _resultados = [];
   bool _mostrarResultados = false;
+  int? _receptorIdSeleccionado; // 🔥 Guardar el ID seleccionado
 
   Future<void> _buscarReceptor() async {
     final nombre = _nombreController.text.trim();
@@ -24,6 +25,7 @@ class _TransferirScreenState extends State<TransferirScreen> {
       setState(() {
         _resultados = [];
         _mostrarResultados = false;
+        _receptorIdSeleccionado = null;
       });
       return;
     }
@@ -33,16 +35,24 @@ class _TransferirScreenState extends State<TransferirScreen> {
       setState(() {
         _resultados = results;
         _mostrarResultados = results.isNotEmpty;
+        if (_resultados.isEmpty) _receptorIdSeleccionado = null;
       });
     } catch (e) {
       setState(() {
         _resultados = [];
         _mostrarResultados = false;
+        _receptorIdSeleccionado = null;
       });
     }
   }
 
-  Future<void> _transferir(int receptorId, String receptorNombre) async {
+  Future<void> _transferir() async {
+    // 🔥 Validar que se haya seleccionado un receptor de la lista
+    if (_receptorIdSeleccionado == null) {
+      setState(() => _estado = '⚠️ Selecciona un receptor de la lista');
+      return;
+    }
+
     final montoTexto = _montoController.text.trim();
     final monto = double.tryParse(montoTexto);
     if (monto == null || monto <= 0) {
@@ -64,27 +74,48 @@ class _TransferirScreenState extends State<TransferirScreen> {
         return;
       }
 
+      // 🔥 Verificar que no sea pago a uno mismo
+      if (int.parse(emisorId) == _receptorIdSeleccionado) {
+        setState(() => _estado = '⚠️ No puedes pagarte a ti mismo');
+        _isProcessing = false;
+        return;
+      }
+
       final api = Provider.of<ApiService>(context, listen: false);
       final response = await api.transferir(
         int.parse(emisorId),
-        receptorId,
+        _receptorIdSeleccionado!,
         monto,
       );
 
-      setState(() {
-        _estado = '✅ Transferencia realizada: $monto VIBRA a $receptorNombre';
-        _isProcessing = false;
-        _nombreController.clear();
-        _montoController.clear();
-        _resultados = [];
-        _mostrarResultados = false;
-      });
+      // 🔥 Verificar que la respuesta sea exitosa (puedes ajustar según tu backend)
+      if (response['estado'] == 'confirmada' || response['transaccion_id'] != null) {
+        setState(() {
+          _estado = '✅ Transferencia realizada: $monto VIBRA';
+          _isProcessing = false;
+        });
+        // 🔥 Cerrar pantalla indicando éxito para que HomeScreen recargue
+        Navigator.pop(context, true);
+      } else {
+        setState(() {
+          _estado = '⚠️ La transferencia no se completó: ${response['estado'] ?? 'error desconocido'}';
+          _isProcessing = false;
+        });
+      }
     } catch (e) {
       setState(() {
         _estado = '❌ Error: $e';
         _isProcessing = false;
       });
+      Navigator.pop(context, false); // 🔥 Cerrar con error
     }
+  }
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _montoController.dispose();
+    super.dispose();
   }
 
   @override
@@ -128,10 +159,14 @@ class _TransferirScreenState extends State<TransferirScreen> {
                     final user = _resultados[index];
                     return ListTile(
                       title: Text(user['nombre']),
-                      subtitle: Text('ID: ${user['id']}'), // ✅ sin email
+                      subtitle: Text('ID: ${user['id']}'),
+                      tileColor: _receptorIdSeleccionado == user['id'] 
+                          ? Colors.grey.shade200 
+                          : null,
                       onTap: () {
                         _nombreController.text = user['nombre'];
                         setState(() {
+                          _receptorIdSeleccionado = user['id'];
                           _mostrarResultados = false;
                         });
                       },
@@ -151,22 +186,7 @@ class _TransferirScreenState extends State<TransferirScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: _isProcessing ? null : () async {
-                final nombre = _nombreController.text.trim();
-                if (nombre.isEmpty) {
-                  setState(() => _estado = '⚠️ Introduce un nombre válido');
-                  return;
-                }
-                final selected = _resultados.firstWhere(
-                  (u) => u['nombre'] == nombre,
-                  orElse: () => null,
-                );
-                if (selected == null) {
-                  setState(() => _estado = '⚠️ Usuario no encontrado. Selecciona de la lista.');
-                  return;
-                }
-                await _transferir(selected['id'], selected['nombre']);
-              },
+              onPressed: _isProcessing ? null : _transferir,
               icon: Icon(_isProcessing ? Icons.hourglass_empty : Icons.send),
               label: Text(_isProcessing ? 'Procesando...' : 'Transferir'),
               style: ElevatedButton.styleFrom(
