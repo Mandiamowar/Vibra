@@ -59,7 +59,7 @@ class _ConfirmarPagoScreenState extends State<ConfirmarPagoScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.payment, size: 80, color: Colors.green),
+            const Icon(Icons.payment, size: 80, color: Colors.green),
             const SizedBox(height: 20),
             Text(_estado, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 30),

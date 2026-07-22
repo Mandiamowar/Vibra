@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => TransferirScreen()),
+                              MaterialPageRoute(builder: (_) => const TransferirScreen()),
                             );
                           },
                           icon: const Icon(Icons.send, size: 30),
@@ -166,8 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          HistoryScreen(),
-          SettingsScreen(),
+          const HistoryScreen(),
+          const SettingsScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

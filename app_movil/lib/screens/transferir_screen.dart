@@ -177,7 +177,7 @@ class _TransferirScreenState extends State<TransferirScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _montoController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Monto (VIBRA)',
                 border: OutlineInputBorder(),

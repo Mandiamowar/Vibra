@@ -13,6 +13,8 @@ void main() {
 class MyApp extends StatelessWidget {
   final _storage = FlutterSecureStorage();
 
+  MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(

@@ -142,7 +142,7 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.storefront, size: 80, color: Colors.green),
+            const Icon(Icons.storefront, size: 80, color: Colors.green),
             const SizedBox(height: 20),
             Text(
               _estado,
@@ -190,7 +190,7 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
             const SizedBox(height: 20),
             TextField(
               controller: _importeController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Importe (€)',
                 border: OutlineInputBorder(),

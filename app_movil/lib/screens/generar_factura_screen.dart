@@ -157,7 +157,7 @@ class _GenerarFacturaScreenState extends State<GenerarFacturaScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _importeController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Importe (€)',
                 border: OutlineInputBorder(),

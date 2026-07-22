@@ -93,13 +93,13 @@ class _GenerarCodigoPagoScreenState extends State<GenerarCodigoPagoScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.qr_code, size: 80, color: Colors.deepPurple),
+            const Icon(Icons.qr_code, size: 80, color: Colors.deepPurple),
             const SizedBox(height: 20),
             Text(_estado, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 30),
             TextField(
               controller: _montoController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Monto (VIBRA)',
                 border: OutlineInputBorder(),
