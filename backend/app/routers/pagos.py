@@ -12,13 +12,10 @@ router = APIRouter(prefix="/pagos", tags=["pagos"])
 
 @router.post("/generar", response_model=PagoGenerarResponse)
 def generar_pago(data: PagoGenerarRequest, db: Session = Depends(get_db)):
-    # 🔥 Solo necesitamos receptor_id y monto
     receptor = db.query(Usuario).filter(Usuario.id == data.receptor_id).first()
     if not receptor:
         raise HTTPException(404, "Receptor no encontrado")
-    # No verificamos saldo del emisor porque aún no se conoce
 
-    # Generar código único
     codigo = None
     while codigo is None:
         nuevo_codigo = f"{random.randint(100000, 999999)}"
@@ -26,10 +23,9 @@ def generar_pago(data: PagoGenerarRequest, db: Session = Depends(get_db)):
         if not existente:
             codigo = nuevo_codigo
 
-    # 🔥 emisor_id se deja en NULL (se asignará al confirmar)
     pago = PagoPendiente(
         codigo=codigo,
-        emisor_id=None,  # ⬅️ Importante: NULL
+        emisor_id=None,
         receptor_id=data.receptor_id,
         monto=Decimal(str(data.monto)),
         expira_en=datetime.utcnow() + timedelta(minutes=5)
@@ -43,10 +39,6 @@ def generar_pago(data: PagoGenerarRequest, db: Session = Depends(get_db)):
         "monto": data.monto,
         "expira_en": pago.expira_en.isoformat()
     }
-
-class PagoConfirmarRequest(BaseModel):
-    codigo: str
-    emisor_id: int  # 🔥 Ahora es obligatorio
 
 @router.post("/confirmar", response_model=PagoConfirmarResponse)
 def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
@@ -62,7 +54,6 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(400, "El código ha expirado")
 
-    # 🔥 El emisor es quien confirma (pagador)
     emisor = db.query(Usuario).filter(Usuario.id == data.emisor_id).first()
     receptor = db.query(Usuario).filter(Usuario.id == pago.receptor_id).first()
     if not emisor or not receptor:
@@ -74,11 +65,10 @@ def confirmar_pago(data: PagoConfirmarRequest, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(400, "Saldo insuficiente del emisor")
 
-    # Actualizar saldos
     emisor.saldo -= monto_float
     receptor.saldo += monto_float
     pago.estado = "completado"
-    pago.emisor_id = emisor.id  # Guardar emisor real
+    pago.emisor_id = emisor.id
 
     tx = Transaccion(
         emisor_id=emisor.id,
