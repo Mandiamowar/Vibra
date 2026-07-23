@@ -11,14 +11,42 @@ class GenerarFacturaScreen extends StatefulWidget {
 }
 
 class _GenerarFacturaScreenState extends State<GenerarFacturaScreen> {
-  final _nombreController = TextEditingController();
-  final _importeController = TextEditingController();
-  final _conceptoController = TextEditingController();
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _importeController = TextEditingController();
+  final TextEditingController _conceptoController = TextEditingController();
   String _estado = 'Busca al cliente y rellena los datos';
   bool _isLoading = false;
   List<dynamic> _clientes = [];
   bool _mostrarResultados = false;
   int? _clienteIdSeleccionado;
+  int? _negocioIdSeleccionado;
+  List<dynamic> _negocios = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarNegocios();
+  }
+
+  Future<void> _cargarNegocios() async {
+    try {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      final usuarioId = await auth.obtenerToken();
+      if (usuarioId == null) return;
+      final api = Provider.of<ApiService>(context, listen: false);
+      final negocio = await api.obtenerNegocio(int.parse(usuarioId));
+      if (negocio['id'] != null) {
+        setState(() {
+          _negocios = [negocio];
+          _negocioIdSeleccionado = negocio['id'];
+        });
+      } else {
+        setState(() => _estado = '⚠️ No tienes un negocio registrado. Regístrate primero.');
+      }
+    } catch (e) {
+      setState(() => _estado = '❌ Error al cargar negocio: $e');
+    }
+  }
 
   Future<void> _buscarCliente() async {
     final nombre = _nombreController.text.trim();
@@ -50,6 +78,10 @@ class _GenerarFacturaScreenState extends State<GenerarFacturaScreen> {
       setState(() => _estado = '⚠️ Selecciona un cliente de la lista');
       return;
     }
+    if (_negocioIdSeleccionado == null) {
+      setState(() => _estado = '⚠️ No hay negocio seleccionado');
+      return;
+    }
     final importe = double.tryParse(_importeController.text.trim());
     if (importe == null || importe <= 0) {
       setState(() => _estado = '⚠️ Importe inválido');
@@ -64,23 +96,9 @@ class _GenerarFacturaScreenState extends State<GenerarFacturaScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final auth = Provider.of<AuthService>(context, listen: false);
-      final usuarioId = await auth.obtenerToken();
-      if (usuarioId == null) {
-        setState(() => _estado = '❌ Usuario no autenticado');
-        return;
-      }
-
       final api = Provider.of<ApiService>(context, listen: false);
-      // Obtener el negocio del usuario (suponemos que tiene al menos uno)
-      final negocio = await api.obtenerNegocio(int.parse(usuarioId));
-      if (negocio['id'] == null) {
-        setState(() => _estado = '❌ No tienes un negocio registrado. Regístrate primero.');
-        return;
-      }
-
       final response = await api.generarFactura(
-        negocioId: negocio['id'],
+        negocioId: _negocioIdSeleccionado!,
         clienteId: _clienteIdSeleccionado!,
         importe: importe,
         concepto: concepto,
@@ -119,6 +137,8 @@ class _GenerarFacturaScreenState extends State<GenerarFacturaScreen> {
           children: [
             Text(_estado, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 16),
+            if (_negocios.isEmpty)
+              const Text('Registra un negocio antes de generar facturas.'),
             TextField(
               controller: _nombreController,
               onChanged: (_) => _buscarCliente(),
@@ -157,7 +177,7 @@ class _GenerarFacturaScreenState extends State<GenerarFacturaScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _importeController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Importe (€)',
                 border: OutlineInputBorder(),
