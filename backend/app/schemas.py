@@ -99,8 +99,7 @@ class FacturaListResponse(BaseModel):
 class PagoGenerarRequest(BaseModel):
     receptor_id: int
     monto: float
-    emisor_id: int | None = None  # Opcional, no se usa en generación
-
+    
 class PagoGenerarResponse(BaseModel):
     codigo: str
     monto: float
@@ -108,6 +107,7 @@ class PagoGenerarResponse(BaseModel):
 
 class PagoConfirmarRequest(BaseModel):
     codigo: str
+    emisor_id: int  # 🔥 Obligatorio
 
 class PagoConfirmarResponse(BaseModel):
     mensaje: str
