@@ -33,14 +33,12 @@ class _ConfirmarPagoScreenState extends State<ConfirmarPagoScreen> {
       final emisorId = await auth.obtenerToken();
       if (emisorId == null) {
         setState(() => _estado = '❌ Usuario no autenticado');
-        _isProcessing = false;
         return;
       }
 
       final api = Provider.of<ApiService>(context, listen: false);
       final response = await api.confirmarPago(
-        codigo,
-        emisorId: int.parse(emisorId),
+        codigo,emisorId: int.parse(emisorId),
       );
 
       setState(() {

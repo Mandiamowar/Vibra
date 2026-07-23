@@ -118,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () {
+                          onPressed: () async{
                             Navigator.push(
                               context,
                               MaterialPageRoute(builder: (_) => const TransferirScreen()),

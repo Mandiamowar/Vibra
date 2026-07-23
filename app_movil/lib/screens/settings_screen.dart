@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import 'login_screen.dart'; // 🔥 Importar LoginScreen
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -17,7 +18,11 @@ class SettingsScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               await auth.eliminarToken();
-              Navigator.pushReplacementNamed(context, '/');
+              // 🔥 Cambiar a pushReplacement con LoginScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
             },
             child: const Text('Cerrar sesión'),
           ),
