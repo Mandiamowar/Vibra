@@ -52,6 +52,8 @@ class NegocioBase(BaseModel):
     email_contacto: str | None = None
     telefono: str | None = None
     serie_factura: str = "A"
+    iva: float = 21.0
+
 
 class NegocioCreate(NegocioBase):
     usuario_id: int  # ID del usuario que será el negocio
@@ -65,6 +67,16 @@ class NegocioResponse(NegocioBase):
 
     class Config:
         from_attributes = True
+
+class NegocioUpdate(BaseModel):
+    nombre_comercial: str | None = None
+    nif: str | None = None
+    direccion: str | None = None
+    email_contacto: str | None = None
+    telefono: str | None = None
+    serie_factura: str | None = None
+    iva: float | None = None
+
 
 # --- ESQUEMAS DE FACTURA ---
 

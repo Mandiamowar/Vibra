@@ -29,6 +29,8 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
 
     numero_factura = f"{negocio.serie_factura or 'A'}-{nuevo_numero:05d}"
     fecha_hoy = date.today().isoformat()
+    iva = getattr(negocio, 'iva', 21.0)
+
 
     # Generar PDF
     pdf_path = generar_factura_pdf(
@@ -38,12 +40,13 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
         cliente=cliente,
         importe=data.importe,
         concepto=data.concepto,
+        iva =iva,
     )
 
     # Enviar email
-    email_destino = data.email_destino or cliente.email
+    email_destino = data.email_destino or cliente.email_factura
     if not email_destino:
-        raise HTTPException(400, "El cliente no tiene email")
+       raise HTTPException(400, "El cliente no tiene email de facturación configurado")
 
     enviado = enviar_factura_por_email(email_destino, pdf_path, numero_factura)
 

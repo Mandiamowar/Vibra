@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Usuario, Negocio
-from ..schemas import NegocioCreate, NegocioResponse
+from ..schemas import NegocioCreate, NegocioResponse, NegocioUpdate
 
 router = APIRouter(prefix="/negocios", tags=["negocios"])
 
@@ -38,4 +38,18 @@ def obtener_negocio(usuario_id: int, db: Session = Depends(get_db)):
     negocio = db.query(Negocio).filter(Negocio.usuario_id == usuario_id).first()
     if not negocio:
         raise HTTPException(404, "Negocio no encontrado")
+    return negocio
+
+from ..schemas import NegocioUpdate  # Lo crearemos
+
+@router.put("/{negocio_id}")
+def actualizar_negocio(negocio_id: int, data: NegocioUpdate, db: Session = Depends(get_db)):
+    negocio = db.query(Negocio).filter(Negocio.id == negocio_id).first()
+    if not negocio:
+        raise HTTPException(404, "Negocio no encontrado")
+    update_data = data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(negocio, key, value)
+    db.commit()
+    db.refresh(negocio)
     return negocio

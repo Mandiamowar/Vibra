@@ -89,6 +89,7 @@ class Negocio(Base):
     serie_factura = Column(String, default="A")
     ultimo_numero = Column(Integer, default=0)
     plan = Column(String, default="gratis")
+    iva = Column(Float, default=21.0)  # IVA por defecto 21%
     creado_en = Column(DateTime, default=datetime.utcnow)
 
     # Relaciones

@@ -144,4 +144,19 @@ class ApiService {
     }
     return null;
   }
+  Future<Map<String, dynamic>> actualizarUsuario(int id, Map<String, dynamic> data) async {
+     return await put('/usuarios/$id', data);
+  }
+  Future<Map<String, dynamic>> put(String endpoint, Map<String, dynamic> data) async {
+     final url = Uri.parse('$baseUrl$endpoint');
+     final response = await http.put(
+      url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode(data),
+  );
+   return jsonDecode(response.body);
+ }
+   Future<Map<String, dynamic>> actualizarNegocio(int negocioId, Map<String, dynamic> data) async {
+     return await put('/negocios/$negocioId', data);
+ }
 }

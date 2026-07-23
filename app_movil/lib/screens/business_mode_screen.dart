@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
-import 'registrar_negocio_screen.dart'; // Asegúrate de tener esta pantalla
+import 'registrar_negocio_screen.dart';
+import 'editar_negocio_screen.dart'; // Asegúrate de que existe
 
 class BusinessModeScreen extends StatefulWidget {
   const BusinessModeScreen({super.key});
@@ -12,22 +13,18 @@ class BusinessModeScreen extends StatefulWidget {
 }
 
 class _BusinessModeScreenState extends State<BusinessModeScreen> {
-  // Controladores
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _codigoController = TextEditingController();
   final TextEditingController _importeController = TextEditingController();
   final TextEditingController _conceptoController = TextEditingController();
-  
-  // Estado
+
   String _estado = 'Cargando datos del negocio...';
   bool _isLoading = true;
   bool _isProcessing = false;
-  
-  // Datos del negocio
+
   Map<String, dynamic>? _negocio;
   bool _tieneNegocio = false;
-  
-  // Datos del cliente
+
   int? _clienteId;
   String? _clienteNombre;
   String? _clienteEmail;
@@ -76,7 +73,6 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
     }
   }
 
-  // 🔍 Buscar cliente por nombre (igual que en TransferirScreen)
   Future<void> _buscarClientePorNombre() async {
     final nombre = _nombreController.text.trim();
     if (nombre.length < 2) {
@@ -103,7 +99,6 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
     }
   }
 
-  // 🔑 Buscar cliente por código de 6 dígitos (simulado, puedes conectar con API real)
   Future<void> _buscarClientePorCodigo(String codigo) async {
     if (codigo.length != 6 || !RegExp(r'^[0-9]+$').hasMatch(codigo)) {
       setState(() => _estado = '⚠️ Código inválido (debe ser de 6 dígitos)');
@@ -116,9 +111,7 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
     });
 
     try {
-      // 🔥 SIMULACIÓN: En producción, llama a un endpoint /clientes/buscar/{codigo}
       await Future.delayed(const Duration(seconds: 1));
-      // Simulación: si el código es 123456, devuelve cliente ficticio
       if (codigo == '123456') {
         setState(() {
           _clienteId = 1;
@@ -144,7 +137,6 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
     }
   }
 
-  // 📄 Generar factura
   Future<void> _generarFactura() async {
     if (_clienteId == null) {
       setState(() => _estado = '⚠️ Identifica un cliente primero');
@@ -205,7 +197,7 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const RegistrarNegocioScreen()),
-    ).then((_) => _cargarNegocio()); // Recargar al volver
+    ).then((_) => _cargarNegocio());
   }
 
   @override
@@ -301,6 +293,19 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.green),
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditarNegocioScreen(negocio: _negocio!),
+                          ),
+                        );
+                        if (result == true) _cargarNegocio();
+                      },
+                      tooltip: 'Editar negocio',
+                    ),
                   ],
                 ),
               ),
@@ -314,7 +319,6 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
               // SECCIÓN: Identificar cliente
               const Text('Identificar cliente', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-              // Búsqueda por nombre
               TextField(
                 controller: _nombreController,
                 onChanged: (_) => _buscarClientePorNombre(),
@@ -355,7 +359,6 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
                   ),
                 ),
               const SizedBox(height: 10),
-              // O por código
               Row(
                 children: [
                   Expanded(
