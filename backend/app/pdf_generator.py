@@ -20,18 +20,19 @@ def _generar_qr(texto: str) -> Image:
     buf.seek(0)
     return Image(buf, width=25 * mm, height=25 * mm)
 
-def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, importe_total: float, concepto: str, iva_porcentaje: float = 21.0) -> str:
+def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, importe: float, concepto: str, iva_porcentaje: float = 21.0) -> str:
     """
     Genera un PDF de factura profesional.
-    :param importe_total: Importe total con IVA incluido (lo que paga el cliente).
+    El importe que se pasa es el total con IVA incluido (lo que paga el cliente).
+    Se calcula automáticamente el neto y el IVA.
     """
     # Obtener IVA del negocio, si no tiene usar el parámetro de fallback
     iva_porcentaje = getattr(negocio, 'iva', iva_porcentaje)
 
     # Calcular neto (base imponible) e IVA a partir del total
     # total = neto * (1 + iva/100) -> neto = total / (1 + iva/100)
-    neto = importe_total / (1 + iva_porcentaje / 100)
-    iva = importe_total - neto
+    neto = importe / (1 + iva_porcentaje / 100)
+    iva = importe - neto
 
     filename = f"{numero_factura.replace('/', '-')}.pdf"
     path = os.path.join(OUTPUT_DIR, filename)
@@ -67,7 +68,7 @@ def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, impor
     # Tabla de desglose (Concepto, Neto, IVA, Total)
     data = [
         ["Concepto", "Neto", f"IVA ({iva_porcentaje:.0f}%)", "Total"],
-        [concepto, f"{neto:.2f} €", f"{iva:.2f} €", f"{importe_total:.2f} €"],
+        [concepto, f"{neto:.2f} €", f"{iva:.2f} €", f"{importe:.2f} €"],
     ]
     col_widths = [70*mm, 30*mm, 30*mm, 30*mm]
     table = Table(data, colWidths=col_widths)
@@ -82,11 +83,11 @@ def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, impor
     ]))
     story.append(table)
     story.append(Spacer(1, 6*mm))
-    story.append(Paragraph(f"<b>Total: {importe_total:.2f} €</b>", ParagraphStyle("TotalStyle", parent=normal, fontSize=13, alignment=2)))
+    story.append(Paragraph(f"<b>Total: {importe:.2f} €</b>", ParagraphStyle("TotalStyle", parent=normal, fontSize=13, alignment=2)))
 
     # QR (verificación)
     story.append(Spacer(1, 10*mm))
-    qr_texto = f"FACTURA:{numero_factura}|NIF:{negocio.nif}|IMPORTE:{importe_total:.2f}"
+    qr_texto = f"FACTURA:{numero_factura}|NIF:{negocio.nif}|IMPORTE:{importe:.2f}"
     story.append(_generar_qr(qr_texto))
     story.append(Paragraph(
         "<font size=8 color=grey>QR de verificación (placeholder — se adaptará a Veri*factu)</font>",
