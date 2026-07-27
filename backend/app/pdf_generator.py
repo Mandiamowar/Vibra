@@ -20,17 +20,15 @@ def _generar_qr(texto: str) -> Image:
     buf.seek(0)
     return Image(buf, width=25 * mm, height=25 * mm)
 
-def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, importe: float, concepto: str, iva_porcentaje: float = 21.0) -> str:
+def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, importe: float, concepto: str) -> str:
     """
     Genera un PDF de factura profesional.
-    El importe que se pasa es el total con IVA incluido (lo que paga el cliente).
-    Se calcula automáticamente el neto y el IVA.
+    :param importe: Importe total con IVA incluido (lo que paga el cliente).
     """
-    # Obtener IVA del negocio, si no tiene usar el parámetro de fallback
-    iva_porcentaje = getattr(negocio, 'iva', iva_porcentaje)
+    # Obtener IVA del negocio, si no tiene usar 21% por defecto
+    iva_porcentaje = getattr(negocio, 'iva', 21.0)
 
     # Calcular neto (base imponible) e IVA a partir del total
-    # total = neto * (1 + iva/100) -> neto = total / (1 + iva/100)
     neto = importe / (1 + iva_porcentaje / 100)
     iva = importe - neto
 
