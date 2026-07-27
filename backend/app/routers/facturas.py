@@ -34,15 +34,13 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
 
     # Generar PDF
     pdf_path = generar_factura_pdf(
-        numero_factura=numero_factura,
-        fecha=fecha_hoy,
-        negocio=negocio,
-        cliente=cliente,
-        importe=data.importe,
-        concepto=data.concepto,
-        iva =iva,
-    )
-
+    numero_factura=numero_factura,
+    fecha=fecha_hoy,
+    negocio=negocio,
+    cliente=cliente,
+    importe=data.importe,
+    concepto=data.concepto,
+   )
     # Enviar email
     email_destino = data.email_destino or cliente.email_factura
     if not email_destino:
