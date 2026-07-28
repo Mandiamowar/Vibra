@@ -45,7 +45,7 @@ async def subir_ticket(
     # Calcular mes y año
     fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
     mes = fecha_obj.month
-    año = fecha_obj.year
+    year = fecha_obj.year  # Cambiado a 'year' para que coincida con el modelo
     
     # Crear ticket
     ticket = Ticket(
@@ -56,7 +56,7 @@ async def subir_ticket(
         categoria=categoria,
         foto_url=foto_url,
         mes=mes,
-        año=año
+        year=year  # <- Aquí usamos 'year' en lugar de 'año'
     )
     db.add(ticket)
     db.commit()
@@ -68,12 +68,12 @@ async def subir_ticket(
 def obtener_tickets_usuario(
     usuario_id: int,
     mes: int | None = None,
-    año: int | None = None,
+    year: int | None = None,
     db: Session = Depends(get_db)
 ):
     query = db.query(Ticket).filter(Ticket.usuario_id == usuario_id)
-    if mes and año:
-        query = query.filter(Ticket.mes == mes, Ticket.año == año)
+    if mes and year:
+        query = query.filter(Ticket.mes == mes, Ticket.year == year)  # Cambiado 'año' por 'year'
     tickets = query.order_by(Ticket.fecha.desc()).all()
     return tickets
 
