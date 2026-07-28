@@ -136,3 +136,25 @@ class LoginResponse(BaseModel):
     nombre: str
     saldo: float
     token: str
+
+class TicketCreate(BaseModel):
+    usuario_id: int
+    fecha: str  # YYYY-MM-DD
+    importe: float
+    proveedor: str | None = None
+    categoria: str | None = None
+
+class TicketResponse(BaseModel):
+    id: int
+    usuario_id: int
+    fecha: date
+    importe: float
+    proveedor: str | None = None
+    categoria: str | None = None
+    foto_url: str | None = None
+    mes: int
+    año: int
+    creado_en: datetime
+    
+    class Config:
+        from_attributes = True

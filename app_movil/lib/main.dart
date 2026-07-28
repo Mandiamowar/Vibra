@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/api_service.dart';
 import 'services/auth_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔥 Inicializar Supabase (si no lo has hecho)
+  await Supabase.initialize(
+    url: 'https://vjzakteablxmoqecuwlk.supabase.co',
+    anonKey: '',
+  );
+
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   final _storage = FlutterSecureStorage();
-
-  MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {

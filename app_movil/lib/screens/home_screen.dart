@@ -10,6 +10,8 @@ import 'perfil_cliente_screen.dart';
 import 'business_mode_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
+import 'mis_tickets_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -64,6 +66,14 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _cargarDatos,
           ),
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MisTicketsScreen()),
+            ),
+            tooltip: 'Mis Tickets',
+    ),
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () => Navigator.push(

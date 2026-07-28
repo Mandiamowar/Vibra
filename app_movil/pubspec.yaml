@@ -15,8 +15,15 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   local_auth: ^2.1.6
   flutter_nfc_kit: ^3.6.2  # opcional
-  qr_flutter: ^4.1.0          # Para generar QR
-  image_picker: ^1.0.0        # (opcional) para subir fotos
+  qr_flutter: ^4.1.0 
+  supabase_flutter: ^2.8.0         # Para generar QR     
+  image: ^4.0.0  # Para comprimir la imagen
+  intl: ^0.19.0  # Para formatear fechas
+  image_picker: ^1.0.7
+  flutter_image_compress: ^2.1.0
+  path_provider: ^2.1.0
+  share_plus: ^7.0.0  
+  qr_code_scanner: ^1.0.0 # (opcional) para subir fotos
   
 dev_dependencies:
   flutter_test:

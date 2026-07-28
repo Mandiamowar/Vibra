@@ -133,3 +133,17 @@ class PagoPendiente(Base):
     # Relaciones
     emisor = relationship("Usuario", foreign_keys=[emisor_id])
     receptor = relationship("Usuario", foreign_keys=[receptor_id])
+
+class Ticket(Base):
+    __tablename__ = "tickets"
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    fecha = Column(Date, nullable=False)
+    importe = Column(DECIMAL(10,2), nullable=False)
+    proveedor = Column(String)
+    categoria = Column(String)
+    foto_url = Column(String)
+    ocr_data = Column(JSON, nullable=True)
+    mes = Column(Integer)
+    año = Column(Integer)
+    creado_en = Column(DateTime, default=datetime.utcnow)
