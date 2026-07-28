@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, DECIMAL
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, DECIMAL, Date, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta  # <-- IMPORTAR timedelta
 from .database import Base
@@ -22,7 +22,8 @@ class Usuario(Base):
     email_factura = Column(String, nullable=True)
     direccion_factura = Column(String, nullable=True)
     
-
+    # Relacion usuario tickets
+    tickets = relationship("Ticket", back_populates="usuario", cascade="all, delete-orphan")
     # Relación con Negocio (1 a 1)
     negocio = relationship("Negocio", back_populates="usuario", uselist=False)
 
@@ -136,14 +137,18 @@ class PagoPendiente(Base):
 
 class Ticket(Base):
     __tablename__ = "tickets"
+
     id = Column(Integer, primary_key=True, index=True)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     fecha = Column(Date, nullable=False)
     importe = Column(DECIMAL(10,2), nullable=False)
-    proveedor = Column(String)
-    categoria = Column(String)
-    foto_url = Column(String)
+    proveedor = Column(String, nullable=False)
+    categoria = Column(String, nullable=True)
+    foto_url = Column(String, nullable=True)
     ocr_data = Column(JSON, nullable=True)
-    mes = Column(Integer)
-    año = Column(Integer)
+    mes = Column(Integer, nullable=False)
+    year = Column(Integer, nullable=False)  # Cambiado de 'año' a 'year'
     creado_en = Column(DateTime, default=datetime.utcnow)
+
+    # Relación con usuario
+    usuario = relationship("Usuario", back_populates="tickets")
