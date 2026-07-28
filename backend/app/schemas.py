@@ -1,6 +1,11 @@
 # Archivo creado por Vibra Pay
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import date, datetime
+from typing import Optional
+
+# ============================================
+# ESQUEMAS DE USUARIO
+# ============================================
 
 class UsuarioBase(BaseModel):
     nombre: str
@@ -8,22 +13,41 @@ class UsuarioBase(BaseModel):
 class UsuarioCreate(UsuarioBase):
     password: str | None = None
 
-
 class UsuarioResponse(UsuarioBase):
     id: int
     saldo: float
     reputacion: float
     creado_en: datetime
+
     class Config:
         from_attributes = True
 
 class UsuarioUpdate(BaseModel):
-    nombre: str | None = None
-    password: str | None = None
-    nif: str | None = None
-    razon_social: str | None = None
-    email_factura: str | None = None
-    direccion_factura: str | None = None
+    nombre: Optional[str] = None
+    password: Optional[str] = None
+    nif: Optional[str] = None
+    razon_social: Optional[str] = None
+    email_factura: Optional[str] = None
+    direccion_factura: Optional[str] = None
+    telefono: Optional[str] = None
+
+# ============================================
+# ESQUEMAS DE LOGIN
+# ============================================
+
+class LoginRequest(BaseModel):
+    nombre: str
+    password: str
+
+class LoginResponse(BaseModel):
+    id: int
+    nombre: str
+    saldo: float
+    token: str
+
+# ============================================
+# ESQUEMAS DE TRANSFERENCIAS
+# ============================================
 
 class TransferenciaRequest(BaseModel):
     emisor_id: int
@@ -38,12 +62,18 @@ class TransferenciaResponse(BaseModel):
     quemado: float
     nuevo_precio: float
 
+# ============================================
+# ESQUEMAS DE PRECIO
+# ============================================
+
 class PrecioResponse(BaseModel):
     precio: float
     gini: float
     transacciones_24h: int
 
-    # --- ESQUEMAS DE NEGOCIO ---
+# ============================================
+# ESQUEMAS DE NEGOCIO
+# ============================================
 
 class NegocioBase(BaseModel):
     nombre_comercial: str
@@ -54,9 +84,17 @@ class NegocioBase(BaseModel):
     serie_factura: str = "A"
     iva: float = 21.0
 
-
 class NegocioCreate(NegocioBase):
-    usuario_id: int  # ID del usuario que será el negocio
+    usuario_id: int
+
+class NegocioUpdate(BaseModel):
+    nombre_comercial: Optional[str] = None
+    nif: Optional[str] = None
+    direccion: Optional[str] = None
+    email_contacto: Optional[str] = None
+    telefono: Optional[str] = None
+    serie_factura: Optional[str] = None
+    iva: Optional[float] = None
 
 class NegocioResponse(NegocioBase):
     id: int
@@ -68,24 +106,16 @@ class NegocioResponse(NegocioBase):
     class Config:
         from_attributes = True
 
-class NegocioUpdate(BaseModel):
-    nombre_comercial: str | None = None
-    nif: str | None = None
-    direccion: str | None = None
-    email_contacto: str | None = None
-    telefono: str | None = None
-    serie_factura: str | None = None
-    iva: float | None = None
-
-
-# --- ESQUEMAS DE FACTURA ---
+# ============================================
+# ESQUEMAS DE FACTURA
+# ============================================
 
 class FacturaCreate(BaseModel):
     negocio_id: int
     cliente_id: int
     importe: float
     concepto: str
-    email_destino: str | None = None  # Si no se envía, se usa el email del cliente
+    email_destino: str | None = None
 
 class FacturaResponse(BaseModel):
     id: int
@@ -108,10 +138,14 @@ class FacturaListResponse(BaseModel):
     cliente_nombre: str
     enviado: bool
 
+# ============================================
+# ESQUEMAS DE PAGOS CON CÓDIGO
+# ============================================
+
 class PagoGenerarRequest(BaseModel):
     receptor_id: int
     monto: float
-    
+
 class PagoGenerarResponse(BaseModel):
     codigo: str
     monto: float
@@ -119,42 +153,43 @@ class PagoGenerarResponse(BaseModel):
 
 class PagoConfirmarRequest(BaseModel):
     codigo: str
-    emisor_id: int  # 🔥 Obligatorio
+    emisor_id: int
 
 class PagoConfirmarResponse(BaseModel):
     mensaje: str
     monto: float
     emisor: str
     receptor: str
-    
-class LoginRequest(BaseModel):
-    nombre: str
-    password: str
+    nuevo_saldo_emisor: float
+    nuevo_saldo_receptor: float
 
-class LoginResponse(BaseModel):
-    id: int
-    nombre: str
-    saldo: float
-    token: str
+# ============================================
+# ESQUEMAS DE TICKETS
+# ============================================
 
 class TicketCreate(BaseModel):
     usuario_id: int
-    fecha: str  # YYYY-MM-DD
+    fecha: date
     importe: float
-    proveedor: str | None = None
-    categoria: str | None = None
+    proveedor: str
+    categoria: Optional[str] = None
+    foto_url: Optional[str] = None
+    ocr_data: Optional[dict] = None
+    mes: int
+    year: int
 
 class TicketResponse(BaseModel):
     id: int
     usuario_id: int
     fecha: date
     importe: float
-    proveedor: str | None = None
-    categoria: str | None = None
-    foto_url: str | None = None
+    proveedor: str
+    categoria: Optional[str] = None
+    foto_url: Optional[str] = None
+    ocr_data: Optional[dict] = None
     mes: int
-    año: int
+    year: int
     creado_en: datetime
-    
+
     class Config:
         from_attributes = True
