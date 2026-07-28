@@ -1,18 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import tickets
-app.include_router(tickets.router)
 from .database import engine, Base
-from .routers import usuarios, transacciones, precio, negocios, facturas, pagos  # <- importa pagos
+from .routers import usuarios, transacciones, precio, negocios, facturas, pagos, tickets  # Importa tickets
 
-# Crear la app ANTES de incluir routers
+# 🔥 1. Crear la app ANTES de usar app.include_router
 app = FastAPI(
     title="Vibra Pay API",
     description="API del ecosistema de pagos descentralizado Vibra Pay",
     version="0.1.0"
 )
 
-# Configurar CORS
+# 🔥 2. Configurar CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,13 +19,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir routers DESPUÉS de crear app
+# 🔥 3. Incluir routers (DESPUÉS de app = FastAPI())
 app.include_router(usuarios.router)
 app.include_router(transacciones.router)
 app.include_router(precio.router)
 app.include_router(negocios.router)
 app.include_router(facturas.router)
-app.include_router(pagos.router)   # <-- ESTA LÍNEA ES CLAVE
+app.include_router(pagos.router)
+app.include_router(tickets.router)  # <-- DEBE IR AQUÍ, DESPUÉS DE app = FastAPI()
 
 @app.get("/")
 def root():
