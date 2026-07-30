@@ -369,7 +369,7 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Código de 6 dígitos',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.qr_code),
+                        
                         counterText: '',
                       ),
                     ),

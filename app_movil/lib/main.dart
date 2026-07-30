@@ -11,13 +11,21 @@ import 'services/auth_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🔥 Cargar variables de entorno desde .env
-  await dotenv.load(fileName: ".env");
+  // 🔥 Cargar .env desde assets
+  await dotenv.load(fileName: "assets/.env");
 
-  // 🔥 Inicializar Supabase con las claves desde el entorno
+  // Verificar que las claves existen
+  final supabaseUrl = dotenv.env['SUPABASE_URL'];
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+
+  if (supabaseUrl == null || supabaseAnonKey == null) {
+    throw Exception('❌ Error: SUPABASE_URL o SUPABASE_ANON_KEY no definidos en .env');
+  }
+
+  // Inicializar Supabase
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   runApp(MyApp());

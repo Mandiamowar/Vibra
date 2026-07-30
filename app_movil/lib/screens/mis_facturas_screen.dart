@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../models/factura.dart';
@@ -54,43 +55,25 @@ class _MisFacturasScreenState extends State<MisFacturasScreen> {
     }
   }
 
-  Future<void> _descargarFactura(int facturaId, String numeroFactura) async {
+  // 🔥 FUNCIÓN CORREGIDA: abre el PDF real en el navegador
+  Future<void> _abrirFactura(int facturaId, String numeroFactura) async {
     try {
       final api = Provider.of<ApiService>(context, listen: false);
       final url = await api.descargarFactura(facturaId);
 
-      // Abrir la URL en el navegador
-      // O usar un paquete como `open_file` o `share` para guardar
-      // Por ahora abrimos en el navegador
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Scaffold(
-            appBar: AppBar(
-              title: Text('Factura $numeroFactura'),
-              backgroundColor: Colors.deepPurple,
-              foregroundColor: Colors.white,
-            ),
-            body: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.picture_as_pdf, size: 80, color: Colors.red),
-                  SizedBox(height: 20),
-                  Text('Descarga el PDF desde el navegador'),
-                  SizedBox(height: 10),
-                  Text('Próximamente: descarga directa en la app'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-
-      // En el futuro, usar `dio` para descargar y guardar localmente
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication, // Abre en navegador
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se puede abrir el PDF')),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al descargar: $e')),
+        SnackBar(content: Text('Error al abrir la factura: $e')),
       );
     }
   }
@@ -182,7 +165,7 @@ class _MisFacturasScreenState extends State<MisFacturasScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: InkWell(
-              onTap: () => _descargarFactura(factura.id, factura.numeroFactura),
+              onTap: () => _abrirFactura(factura.id, factura.numeroFactura),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.all(16),

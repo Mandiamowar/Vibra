@@ -58,6 +58,7 @@ class _PerfilClienteScreenState extends State<PerfilClienteScreen> {
     }
   }
 
+  // 🔥 FUNCIÓN CORREGIDA
   Future<void> _guardarDatos() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -65,6 +66,8 @@ class _PerfilClienteScreenState extends State<PerfilClienteScreen> {
 
     try {
       final api = Provider.of<ApiService>(context, listen: false);
+      
+      // 🔥 ENVIAR TODOS LOS CAMPOS (incluso vacíos)
       final data = {
         'nombre': _nombreController.text.trim(),
         'nif': _nifController.text.trim(),
@@ -73,11 +76,9 @@ class _PerfilClienteScreenState extends State<PerfilClienteScreen> {
         'razon_social': _razonSocialController.text.trim(),
         'telefono': _telefonoController.text.trim(),
       };
-      // Eliminar campos vacíos
-      final filteredData = Map.fromEntries(
-        data.entries.where((entry) => entry.value.isNotEmpty)
-      );
-      await api.actualizarUsuario(_usuarioId!, filteredData);
+
+      // 🔥 Ya no filtramos campos vacíos
+      await api.actualizarUsuario(_usuarioId!, data);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Perfil actualizado correctamente')),

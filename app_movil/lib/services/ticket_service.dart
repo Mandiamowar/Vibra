@@ -28,7 +28,9 @@ class TicketService {
         fileName,
         fileBytes,
       );
-      
+     // En subirTicket, después de subir a Storage
+      final publicUrl = _supabase.storage.from('tickets').getPublicUrl(fileName);
+    // Luego guarda publicUrl en foto_url 
       fotoUrl = _supabase.storage.from('tickets').getPublicUrl(fileName);
     }
 

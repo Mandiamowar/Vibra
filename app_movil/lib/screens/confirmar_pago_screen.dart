@@ -81,7 +81,7 @@ class _ConfirmarPagoScreenState extends State<ConfirmarPagoScreen> {
               decoration: const InputDecoration(
                 labelText: 'Código de 6 dígitos',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.qr_code),
+                
               ),
             ),
             const SizedBox(height: 20),
