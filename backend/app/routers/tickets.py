@@ -81,3 +81,12 @@ def eliminar_ticket(ticket_id: int, db: Session = Depends(get_db)):
     db.delete(ticket)
     db.commit()
     return {"mensaje": "Ticket eliminado correctamente"}
+
+@router.get("/mis-tickets/{usuario_id}/mes/{mes}/{year}")
+def obtener_tickets_por_mes(usuario_id: int, mes: int, year: int, db: Session = Depends(get_db)):
+    tickets = db.query(Ticket).filter(
+        Ticket.usuario_id == usuario_id,
+        Ticket.mes == mes,
+        Ticket.year == year
+    ).order_by(Ticket.fecha.desc()).all()
+    return tickets
