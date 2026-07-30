@@ -18,9 +18,15 @@ class UsuarioResponse(UsuarioBase):
     saldo: float
     reputacion: float
     creado_en: datetime
+    email_factura: Optional[str] = None  # 🔥 AÑADIR ESTA LÍNEA
+    nif: Optional[str] = None
+    direccion_factura: Optional[str] = None
+    telefono: Optional[str] = None
+    razon_social: Optional[str] = None
 
     class Config:
         from_attributes = True
+
 
 class UsuarioUpdate(BaseModel):
     nombre: Optional[str] = None

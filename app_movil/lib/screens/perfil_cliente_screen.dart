@@ -60,38 +60,38 @@ class _PerfilClienteScreenState extends State<PerfilClienteScreen> {
 
   // 🔥 FUNCIÓN CORREGIDA
   Future<void> _guardarDatos() async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSaving = true);
+  setState(() => _isSaving = true);
 
-    try {
-      final api = Provider.of<ApiService>(context, listen: false);
-      
-      // 🔥 ENVIAR TODOS LOS CAMPOS (incluso vacíos)
-      final data = {
-        'nombre': _nombreController.text.trim(),
-        'nif': _nifController.text.trim(),
-        'email_factura': _emailController.text.trim(),
-        'direccion_factura': _direccionController.text.trim(),
-        'razon_social': _razonSocialController.text.trim(),
-        'telefono': _telefonoController.text.trim(),
-      };
+  try {
+    final api = Provider.of<ApiService>(context, listen: false);
+    
+    final data = {
+      'nombre': _nombreController.text.trim(),
+      'nif': _nifController.text.trim(),
+      'email_factura': _emailController.text.trim(),
+      'direccion_factura': _direccionController.text.trim(),
+      'razon_social': _razonSocialController.text.trim(),
+      'telefono': _telefonoController.text.trim(),
+    };
 
-      // 🔥 Ya no filtramos campos vacíos
-      await api.actualizarUsuario(_usuarioId!, data);
+    await api.actualizarUsuario(_usuarioId!, data);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Perfil actualizado correctamente')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Error al guardar: $e')),
-      );
-    } finally {
-      setState(() => _isSaving = false);
-    }
+    // 🔥 Recargar los datos para actualizar la UI
+    await _cargarDatos();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('✅ Perfil actualizado correctamente')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('❌ Error al guardar: $e')),
+    );
+  } finally {
+    setState(() => _isSaving = false);
   }
-
+}
   @override
   void dispose() {
     _nombreController.dispose();

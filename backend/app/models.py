@@ -108,7 +108,7 @@ class Factura(Base):
     fecha = Column(String, nullable=False)  # ISO date
     importe = Column(DECIMAL(10,2), nullable=False)
     concepto = Column(String, nullable=True)
-    pdf_path = Column(String, nullable=True)
+    pdf_url = Column(String, nullable=True)  # 🔥 Nuevo campo
     enviado = Column(Integer, default=0)
     creado_en = Column(DateTime, default=datetime.utcnow)
 

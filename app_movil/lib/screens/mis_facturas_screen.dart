@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // 🔥 Importar para usar Clipboard
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
@@ -55,20 +56,40 @@ class _MisFacturasScreenState extends State<MisFacturasScreen> {
     }
   }
 
-  // 🔥 FUNCIÓN CORREGIDA: abre el PDF real en el navegador
+  // 🔥 FUNCIÓN CORREGIDA (con Clipboard)
   Future<void> _abrirFactura(int facturaId, String numeroFactura) async {
     try {
       final api = Provider.of<ApiService>(context, listen: false);
       final url = await api.descargarFactura(facturaId);
 
-      if (await canLaunchUrl(Uri.parse(url))) {
-        await launchUrl(
-          Uri.parse(url),
-          mode: LaunchMode.externalApplication, // Abre en navegador
-        );
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se puede abrir el PDF')),
+        // Si no se puede abrir, mostrar un diálogo con la URL
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('No se puede abrir el PDF'),
+            content: Text('Intenta copiar esta URL en tu navegador:\n\n$url'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cerrar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Copiar al portapapeles
+                  Clipboard.setData(ClipboardData(text: url));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('URL copiada al portapapeles')),
+                  );
+                  Navigator.pop(context);
+                },
+                child: const Text('Copiar URL'),
+              ),
+            ],
+          ),
         );
       }
     } catch (e) {

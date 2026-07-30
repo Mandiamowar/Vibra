@@ -20,7 +20,7 @@ def _generar_qr(texto: str) -> Image:
     buf.seek(0)
     return Image(buf, width=25 * mm, height=25 * mm)
 
-def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, importe: float, concepto: str) -> str:
+def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, importe: float, concepto: str) -> bytes:
     """
     Genera un PDF de factura profesional.
     :param importe: Importe total con IVA incluido (lo que paga el cliente).
@@ -93,4 +93,7 @@ def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, impor
     ))
 
     doc.build(story)
+    buffer = BytesIO()
+    doc.build(story, buffer)
+    return buffer.getvalue()
     return path
