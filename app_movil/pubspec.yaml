@@ -25,7 +25,10 @@ dependencies:
   flutter_image_compress: ^2.1.0
   path_provider: ^2.1.0
   url_launcher: ^6.3.0
-   
+  archive: ^3.4.10        # Para crear archivos ZIP
+  share_plus: ^7.0.0      # Para compartir archivos
+  dio: ^5.4.0             # Para descargar archivos de forma eficiente 
+  cross_file: ^0.3.4  # Si share_plus no exporta XFile, lo añadimos
   
 dev_dependencies:
   flutter_test:
