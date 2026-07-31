@@ -1,26 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import date
-import os
 from supabase import create_client
-from io import BytesIO
+import os
 
 from ..database import get_db
 from ..models import Usuario, Negocio, Factura
 from ..schemas import FacturaCreate, FacturaResponse, FacturaListResponse
-from ..pdf_generator import generar_factura_pdf_bytes  # Nueva función
+from ..pdf_generator import generar_factura_pdf_bytes
 from ..mailer import enviar_factura_por_email
 
 router = APIRouter(prefix="/facturas", tags=["facturas"])
 
-# 🔥 Inicializar cliente de Supabase con variables de entorno
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-
-if not supabase_url or not supabase_service_key:
+# 🔥 Verificar variables de entorno
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
     raise Exception("❌ Faltan variables de entorno SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY")
 
-supabase = create_client(supabase_url, supabase_service_key)
+supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 @router.post("/generar", response_model=FacturaResponse)
 def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
@@ -43,7 +41,7 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
     numero_factura = f"{negocio.serie_factura or 'A'}-{nuevo_numero:05d}"
     fecha_hoy = date.today().isoformat()
 
-    # 🔥 Generar PDF en bytes (usando la nueva función)
+    # 🔥 Generar PDF en bytes
     pdf_bytes = generar_factura_pdf_bytes(
         numero_factura=numero_factura,
         fecha=fecha_hoy,
@@ -53,30 +51,28 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
         concepto=data.concepto,
     )
 
-    # 🔥 Subir PDF a Supabase Storage
+    # 🔥 Subir a Supabase Storage
     file_name = f"facturas/{numero_factura}.pdf"
     try:
         supabase.storage.from_('facturas').upload(
-            file=pdf_bytes,
             path=file_name,
+            file=pdf_bytes,
             file_options={"content-type": "application/pdf"}
         )
     except Exception as e:
         raise HTTPException(500, f"Error al subir el PDF a Storage: {str(e)}")
 
-    # Obtener URL pública del PDF
+    # Obtener URL pública
     pdf_url = supabase.storage.from_('facturas').get_public_url(file_name)
 
-    # Enviar email (usamos la URL en lugar de la ruta local)
+    # Enviar email
     email_destino = data.email_destino or cliente.email_factura
     if not email_destino:
         raise HTTPException(400, "El cliente no tiene email de facturación configurado")
 
-    # 🔥 Aquí deberías ajustar mailer.py para que envíe la URL o el PDF adjunto
-    # Por ahora, enviamos solo la URL
     enviado = enviar_factura_por_email(email_destino, pdf_url, numero_factura)
 
-    # 🔥 Guardar en base de datos (usando pdf_url en lugar de pdf_path)
+    # 🔥 Guardar en base de datos (con pdf_url)
     factura = Factura(
         negocio_id=negocio.id,
         cliente_id=cliente.id,
@@ -85,7 +81,7 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
         fecha=fecha_hoy,
         importe=data.importe,
         concepto=data.concepto,
-        pdf_url=pdf_url,  # 🔥 CAMBIO: pdf_url en lugar de pdf_path
+        pdf_url=pdf_url,  # Guardamos la URL pública
         enviado=1 if enviado else 0,
     )
     db.add(factura)
@@ -95,7 +91,7 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
     return {
         "id": factura.id,
         "numero_factura": numero_factura,
-        "pdf_url": pdf_url,  # 🔥 Devolvemos la URL pública
+        "pdf_url": pdf_url,
         "enviado": enviado,
         "fecha": fecha_hoy,
         "importe": data.importe,
@@ -124,8 +120,7 @@ def descargar_pdf(factura_id: int, db: Session = Depends(get_db)):
     if not factura:
         raise HTTPException(404, "Factura no encontrada")
     if not factura.pdf_url:
-        raise HTTPException(404, "El PDF no tiene URL asociada")
+        raise HTTPException(404, "La factura no tiene PDF asociado")
 
-    # Redirigir a la URL pública de Supabase
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url=factura.pdf_url)
