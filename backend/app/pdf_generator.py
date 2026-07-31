@@ -1,5 +1,6 @@
 import os
 import qrcode
+import hashlib
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -22,11 +23,16 @@ def _generar_qr(texto: str) -> Image:
 
 def generar_factura_pdf_bytes(numero_factura: str, fecha: str, negocio, cliente, importe: float, concepto: str) -> bytes:
     """
-    Genera el PDF y devuelve los bytes (sin guardar en disco).
+    Genera el PDF de factura con todos los datos necesarios para Veri*factu.
     """
+    # Cálculo de IVA
     iva_porcentaje = getattr(negocio, 'iva', 21.0)
     neto = importe / (1 + iva_porcentaje / 100)
     iva = importe - neto
+
+    # Generar hash de la factura (para Veri*factu)
+    hash_data = f"{numero_factura}|{negocio.nif}|{cliente.nif if hasattr(cliente, 'nif') and cliente.nif else 'SIN-NIF'}|{importe:.2f}|{fecha}"
+    hash_value = hashlib.sha256(hash_data.encode()).hexdigest()
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=20*mm, bottomMargin=20*mm)
@@ -35,7 +41,7 @@ def generar_factura_pdf_bytes(numero_factura: str, fecha: str, negocio, cliente,
     normal = styles["Normal"]
     story = []
 
-    # Datos del negocio (emisor)
+    # ----- DATOS DEL NEGOCIO (EMISOR) -----
     story.append(Paragraph(negocio.nombre_comercial, title_style))
     story.append(Paragraph(f"NIF: {negocio.nif}", normal))
     if negocio.direccion:
@@ -44,20 +50,22 @@ def generar_factura_pdf_bytes(numero_factura: str, fecha: str, negocio, cliente,
         story.append(Paragraph(f"Tel: {negocio.telefono}", normal))
     story.append(Spacer(1, 12*mm))
 
-    # Número y fecha
+    # ----- NÚMERO Y FECHA -----
     story.append(Paragraph(f"<b>Factura nº:</b> {numero_factura}", normal))
     story.append(Paragraph(f"<b>Fecha:</b> {fecha}", normal))
     story.append(Spacer(1, 6*mm))
 
-    # Datos del cliente
+    # ----- DATOS DEL CLIENTE (RECEPTOR) -----
     story.append(Paragraph(f"<b>Cliente:</b> {cliente.nombre}", normal))
     if hasattr(cliente, 'nif') and cliente.nif:
         story.append(Paragraph(f"<b>NIF/CIF:</b> {cliente.nif}", normal))
+    else:
+        story.append(Paragraph("<b>NIF/CIF:</b> No disponible", normal))
     if hasattr(cliente, 'direccion') and cliente.direccion:
         story.append(Paragraph(f"<b>Dirección:</b> {cliente.direccion}", normal))
     story.append(Spacer(1, 10*mm))
 
-    # Tabla de desglose
+    # ----- TABLA DE DESGLOSE -----
     data = [
         ["Concepto", "Neto", f"IVA ({iva_porcentaje:.0f}%)", "Total"],
         [concepto, f"{neto:.2f} €", f"{iva:.2f} €", f"{importe:.2f} €"],
@@ -77,12 +85,25 @@ def generar_factura_pdf_bytes(numero_factura: str, fecha: str, negocio, cliente,
     story.append(Spacer(1, 6*mm))
     story.append(Paragraph(f"<b>Total: {importe:.2f} €</b>", ParagraphStyle("TotalStyle", parent=normal, fontSize=13, alignment=2)))
 
-    # QR
+    # ----- HASH (VERI*FACTU) -----
+    story.append(Spacer(1, 6*mm))
+    story.append(Paragraph(f"<b>Hash de la factura:</b> {hash_value}", normal))
+    story.append(Paragraph("<font size=8 color=grey>Identificador único para verificación y trazabilidad</font>", normal))
+
+    # ----- QR CON TODOS LOS DATOS -----
     story.append(Spacer(1, 10*mm))
-    qr_texto = f"FACTURA:{numero_factura}|NIF:{negocio.nif}|IMPORTE:{importe:.2f}"
+    qr_texto = (
+        f"FACTURA:{numero_factura}|"
+        f"FECHA:{fecha}|"
+        f"EMISOR_NIF:{negocio.nif}|"
+        f"RECEPTOR_NIF:{cliente.nif if hasattr(cliente, 'nif') and cliente.nif else 'SIN-NIF'}|"
+        f"IMPORTE:{importe:.2f}|"
+        f"IVA:{iva:.2f}|"
+        f"HASH:{hash_value}"
+    )
     story.append(_generar_qr(qr_texto))
     story.append(Paragraph(
-        "<font size=8 color=grey>QR de verificación (placeholder — se adaptará a Veri*factu)</font>",
+        "<font size=8 color=grey>QR de verificación Veri*factu (incluye todos los datos de la factura)</font>",
         normal
     ))
 

@@ -17,6 +17,8 @@ class _MisFacturasScreenState extends State<MisFacturasScreen> {
   List<Factura> _facturas = [];
   bool _isLoading = true;
   String _error = '';
+  bool _isSelecting = false;
+  Set<int> _selectedIds = {};
 
   @override
   void initState() {
@@ -107,6 +109,32 @@ class _MisFacturasScreenState extends State<MisFacturasScreen> {
     );
   }
 
+  // 🔥 Funciones de selección
+  Future<void> _descargarSeleccionadas() async {
+    if (_selectedIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona al menos una factura')),
+      );
+      return;
+    }
+    // Por ahora solo un mensaje (próximamente implementaremos ZIP)
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Descargando ${_selectedIds.length} facturas... (próximamente)')),
+    );
+  }
+
+  Future<void> _enviarSeleccionadas() async {
+    if (_selectedIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona al menos una factura')),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Enviando ${_selectedIds.length} facturas... (próximamente)')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,6 +147,25 @@ class _MisFacturasScreenState extends State<MisFacturasScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _cargarFacturas,
           ),
+          IconButton(
+            icon: Icon(_isSelecting ? Icons.close : Icons.select_all), // 🔥 Icono corregido
+            onPressed: () {
+              setState(() {
+                _isSelecting = !_isSelecting;
+                if (!_isSelecting) _selectedIds.clear();
+              });
+            },
+          ),
+          if (_isSelecting)
+            IconButton(
+              icon: const Icon(Icons.download),
+              onPressed: _descargarSeleccionadas,
+            ),
+          if (_isSelecting)
+            IconButton(
+              icon: const Icon(Icons.send),
+              onPressed: _enviarSeleccionadas,
+            ),
         ],
       ),
       body: _buildBody(),
@@ -194,12 +241,34 @@ class _MisFacturasScreenState extends State<MisFacturasScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: InkWell(
-              onTap: () => _abrirFactura(factura.id, factura.numeroFactura),
-              borderRadius: BorderRadius.circular(12),
+              onTap: _isSelecting
+                  ? () {
+                      setState(() {
+                        if (_selectedIds.contains(factura.id)) {
+                          _selectedIds.remove(factura.id);
+                        } else {
+                          _selectedIds.add(factura.id);
+                        }
+                      });
+                    }
+                  : () => _abrirFactura(factura.id, factura.numeroFactura),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
+                    if (_isSelecting) // 🔥 Checkbox en modo selección
+                      Checkbox(
+                        value: _selectedIds.contains(factura.id),
+                        onChanged: (_) {
+                          setState(() {
+                            if (_selectedIds.contains(factura.id)) {
+                              _selectedIds.remove(factura.id);
+                            } else {
+                              _selectedIds.add(factura.id);
+                            }
+                          });
+                        },
+                      ),
                     Container(
                       width: 50,
                       height: 50,
