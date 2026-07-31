@@ -52,7 +52,7 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
     )
 
     # 🔥 Subir a Supabase Storage
-    file_name = f"facturas/{numero_factura}.pdf"
+    file_name = f"{numero_factura}.pdf"
     try:
         supabase.storage.from_('facturas').upload(
             path=file_name,
@@ -62,8 +62,8 @@ def generar_factura(data: FacturaCreate, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(500, f"Error al subir el PDF a Storage: {str(e)}")
 
-    # Obtener URL pública
-    pdf_url = supabase.storage.from_('facturas').get_public_url(file_name)
+    # Obtener URL públicapd
+    pdf_url = f"{SUPABASE_URL}/storage/v1/object/public/facturas/{file_name}"
 
     # Enviar email
     email_destino = data.email_destino or cliente.email_factura
