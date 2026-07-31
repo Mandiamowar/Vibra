@@ -20,22 +20,16 @@ def _generar_qr(texto: str) -> Image:
     buf.seek(0)
     return Image(buf, width=25 * mm, height=25 * mm)
 
-def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, importe: float, concepto: str) -> bytes:
+def generar_factura_pdf_bytes(numero_factura: str, fecha: str, negocio, cliente, importe: float, concepto: str) -> bytes:
     """
-    Genera un PDF de factura profesional.
-    :param importe: Importe total con IVA incluido (lo que paga el cliente).
+    Genera el PDF y devuelve los bytes (sin guardar en disco).
     """
-    # Obtener IVA del negocio, si no tiene usar 21% por defecto
     iva_porcentaje = getattr(negocio, 'iva', 21.0)
-
-    # Calcular neto (base imponible) e IVA a partir del total
     neto = importe / (1 + iva_porcentaje / 100)
     iva = importe - neto
 
-    filename = f"{numero_factura.replace('/', '-')}.pdf"
-    path = os.path.join(OUTPUT_DIR, filename)
-
-    doc = SimpleDocTemplate(path, pagesize=A4, topMargin=20*mm, bottomMargin=20*mm)
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=20*mm, bottomMargin=20*mm)
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle("TitleCustom", parent=styles["Title"], fontSize=18, spaceAfter=4)
     normal = styles["Normal"]
@@ -63,7 +57,7 @@ def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, impor
         story.append(Paragraph(f"<b>Dirección:</b> {cliente.direccion}", normal))
     story.append(Spacer(1, 10*mm))
 
-    # Tabla de desglose (Concepto, Neto, IVA, Total)
+    # Tabla de desglose
     data = [
         ["Concepto", "Neto", f"IVA ({iva_porcentaje:.0f}%)", "Total"],
         [concepto, f"{neto:.2f} €", f"{iva:.2f} €", f"{importe:.2f} €"],
@@ -83,7 +77,7 @@ def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, impor
     story.append(Spacer(1, 6*mm))
     story.append(Paragraph(f"<b>Total: {importe:.2f} €</b>", ParagraphStyle("TotalStyle", parent=normal, fontSize=13, alignment=2)))
 
-    # QR (verificación)
+    # QR
     story.append(Spacer(1, 10*mm))
     qr_texto = f"FACTURA:{numero_factura}|NIF:{negocio.nif}|IMPORTE:{importe:.2f}"
     story.append(_generar_qr(qr_texto))
@@ -93,7 +87,4 @@ def generar_factura_pdf(numero_factura: str, fecha: str, negocio, cliente, impor
     ))
 
     doc.build(story)
-    buffer = BytesIO()
-    doc.build(story, buffer)
     return buffer.getvalue()
-    return path
