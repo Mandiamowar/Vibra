@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 🔥 Importar para usar Clipboard
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
@@ -56,47 +56,55 @@ class _MisFacturasScreenState extends State<MisFacturasScreen> {
     }
   }
 
-  // 🔥 FUNCIÓN CORREGIDA (con Clipboard)
+  // 🔥 FUNCIÓN CORREGIDA: abre el PDF sin comprobación previa
   Future<void> _abrirFactura(int facturaId, String numeroFactura) async {
     try {
       final api = Provider.of<ApiService>(context, listen: false);
-      final url = await api.descargarFactura(facturaId);
-
+      String url = await api.descargarFactura(facturaId);
+      
+      // Limpiar URL: eliminar parámetros extra (como '?')
+      url = url.split('?').first;
+      
       final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      
+      // Intentar abrir directamente en el navegador externo
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        // Si se abre correctamente, no hacemos nada más
       } else {
-        // Si no se puede abrir, mostrar un diálogo con la URL
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text('No se puede abrir el PDF'),
-            content: Text('Intenta copiar esta URL en tu navegador:\n\n$url'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cerrar'),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Copiar al portapapeles
-                  Clipboard.setData(ClipboardData(text: url));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('URL copiada al portapapeles')),
-                  );
-                  Navigator.pop(context);
-                },
-                child: const Text('Copiar URL'),
-              ),
-            ],
-          ),
-        );
+        // Si falla, mostrar diálogo con la URL
+        _mostrarDialogoError(url);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al abrir la factura: $e')),
       );
     }
+  }
+
+  void _mostrarDialogoError(String url) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('No se puede abrir el PDF'),
+        content: Text('Intenta copiar esta URL en tu navegador:\n\n$url'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: url));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('URL copiada al portapapeles')),
+              );
+              Navigator.pop(context);
+            },
+            child: const Text('Copiar URL'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
