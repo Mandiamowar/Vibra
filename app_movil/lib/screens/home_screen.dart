@@ -4,14 +4,14 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'transferir_screen.dart';
 import 'generar_codigo_pago_screen.dart';
-import 'confirmar_pago_screen.dart'; // ← IMPORTANTE: añadir este import
+import 'confirmar_pago_screen.dart';
 import 'mis_facturas_screen.dart';
 import 'perfil_cliente_screen.dart';
 import 'business_mode_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
 import 'mis_tickets_screen.dart';
-
+import 'scan_payment_screen.dart'; // ✅ Importar la nueva pantalla
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,28 +33,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _cargarDatos() async {
-  print('🔄 Cargando datos...');
-  setState(() => _isLoading = true);
-  final api = Provider.of<ApiService>(context, listen: false);
-  final auth = Provider.of<AuthService>(context, listen: false);
-  try {
-    final precioResp = await api.obtenerPrecio();
-    print('💰 Precio: $precioResp');
-    setState(() => _precio = precioResp['precio'] ?? 0.0);
+    print('🔄 Cargando datos...');
+    setState(() => _isLoading = true);
+    final api = Provider.of<ApiService>(context, listen: false);
+    final auth = Provider.of<AuthService>(context, listen: false);
+    try {
+      final precioResp = await api.obtenerPrecio();
+      print('💰 Precio: $precioResp');
+      setState(() => _precio = precioResp['precio'] ?? 0.0);
 
-    final token = await auth.obtenerToken();
-    print('🔑 Token: $token');
-    if (token != null) {
-      final usuario = await api.obtenerUsuario(int.parse(token));
-      print('👤 Usuario: $usuario');
-      setState(() => _saldo = usuario['saldo'] ?? 0.0);
+      final token = await auth.obtenerToken();
+      print('🔑 Token: $token');
+      if (token != null) {
+        final usuario = await api.obtenerUsuario(int.parse(token));
+        print('👤 Usuario: $usuario');
+        setState(() => _saldo = usuario['saldo'] ?? 0.0);
+      }
+    } catch (e) {
+      print('❌ Error en _cargarDatos: $e');
+    } finally {
+      setState(() => _isLoading = false);
     }
-  } catch (e) {
-    print('❌ Error en _cargarDatos: $e');
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -73,35 +73,40 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (_) => const MisTicketsScreen()),
             ),
             tooltip: 'Mis Tickets',
-    ),
+          ),
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const PerfilClienteScreen())),
+              context,
+              MaterialPageRoute(builder: (_) => const PerfilClienteScreen()),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.storefront),
             onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const BusinessModeScreen())),
+              context,
+              MaterialPageRoute(builder: (_) => const BusinessModeScreen()),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.receipt_long),
             onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const MisFacturasScreen())),
+              context,
+              MaterialPageRoute(builder: (_) => const MisFacturasScreen()),
+            ),
             tooltip: 'Mis Facturas',
           ),
-          // 🔥 NUEVO BOTÓN: Confirmar pago con código
-      IconButton(
-          icon: const Icon(Icons.payment),
-          onPressed: () async {
-           await Navigator.push(
-               context,
-               MaterialPageRoute(builder: (_) => const ConfirmarPagoScreen()),
-    );
-     _cargarDatos(); // 🔥 SIEMPRE recargar al volver
-  },
-  tooltip: 'Confirmar pago con código',
-),
+          IconButton(
+            icon: const Icon(Icons.payment),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ConfirmarPagoScreen()),
+              );
+              _cargarDatos();
+            },
+            tooltip: 'Confirmar pago con código',
+          ),
         ],
       ),
       body: IndexedStack(
@@ -128,8 +133,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () async{
-                            Navigator.push(
+                          onPressed: () async {
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(builder: (_) => const TransferirScreen()),
                             );
@@ -172,8 +177,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // 🔥 NUEVO BOTÓN: Pagar con QR/NFC
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ScanPaymentScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.qr_code_scanner),
+                      label: const Text('Pagar con QR / NFC', style: TextStyle(fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   const Text(
-                    'Paga a otro usuario o recibe un pago con código de 6 dígitos.',
+                    'Paga a otro usuario, recibe un código de 6 dígitos, o escanea un QR/NFC.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
