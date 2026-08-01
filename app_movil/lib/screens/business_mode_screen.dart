@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
- // ✅ Importar para NdefMessage y NdefRecord
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../models/linea_concepto.dart';
 import 'registrar_negocio_screen.dart';
 import 'editar_negocio_screen.dart';
+import 'package:ndef/ndef.dart' as ndef;
 
 class BusinessModeScreen extends StatefulWidget {
   const BusinessModeScreen({super.key});
@@ -241,9 +241,15 @@ class _BusinessModeScreenState extends State<BusinessModeScreen> {
     }
   }
 
- // 📡 Escribir en tag NFC
-Future<void> _escribirNFC() async {
-  if (_qrData == null) return;
+  // 📡 Escribir en tag NFC
+    Future<void> _escribirNFC() async {
+  if (_qrData == null) {
+    setState(() => _estado = '⚠️ Primero genera un código');
+    return;
+  }
+
+  setState(() => _estado = '📡 Acerca el teléfono al tag NFC...');
+
   try {
     final availability = await FlutterNfcKit.nfcAvailability;
     if (availability != NFCAvailability.available) {
@@ -251,15 +257,17 @@ Future<void> _escribirNFC() async {
       return;
     }
 
-    // Crear mensaje NDEF (usando la API de flutter_nfc_kit)
-    final ndefMessage = NdefMessage([
-      NdefRecord.createText(_qrData!),
+    await FlutterNfcKit.poll(timeout: const Duration(seconds: 10));
+
+    await FlutterNfcKit.writeNDEFRecords([
+      ndef.UriRecord.fromString(_qrData!),
     ]);
-    await FlutterNfcKit.writeNDEF(ndefMessage);
+
     setState(() => _estado = '✅ Tag NFC escrito correctamente');
-    await FlutterNfcKit.finish();
   } catch (e) {
     setState(() => _estado = '❌ Error al escribir NFC: $e');
+  } finally {
+    await FlutterNfcKit.finish();
   }
 }
 
