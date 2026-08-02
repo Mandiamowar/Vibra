@@ -9,7 +9,7 @@ app = FastAPI(
     description="API del ecosistema de pagos descentralizado Vibra Pay",
     version="0.1.0"
 )
-
+# 🔥 Cambio forzado para asegurar que transacciones.router está incluido
 # 🔥 2. Configurar CORS
 app.add_middleware(
     CORSMiddleware,
