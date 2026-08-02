@@ -9,6 +9,8 @@ from ..grafo import GrafoTemporal
 from ..poiu import ConsensoPoIU
 from ..tokenomics import Tokenomics
 
+print("🚀 Cargando router de transacciones...")
+
 router = APIRouter(prefix="/transacciones", tags=["transacciones"])
 
 @router.post("/transferir", response_model=TransferenciaResponse)
